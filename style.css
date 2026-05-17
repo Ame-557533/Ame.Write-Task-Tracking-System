@@ -1,0 +1,403 @@
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Design tokens ── */
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --border: rgba(0,0,0,0.10);
+  --border-strong: rgba(0,0,0,0.20);
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b6b80;
+  --text-muted: #9999aa;
+  --accent: #1a1a2e;
+  --accent-hover: #2d2d4a;
+  --danger-bg: #fff1f1;
+  --danger-border: rgba(220,60,60,0.25);
+  --danger-text: #c0392b;
+  --success-bg: #f0faf5;
+  --success-border: rgba(30,160,100,0.25);
+  --success-text: #1a7a50;
+  --info-text: #2563eb;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 2px 16px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06);
+}
+
+/* ── Base ── */
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ── Nav bar ── */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  background: rgba(245,243,239,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 0.5px solid var(--border);
+  z-index: 10;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.nav-mark {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-mark span {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.nav-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem 2.25rem;
+  margin-top: 56px;
+}
+
+/* ── View switching ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Card header ── */
+.card-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.card-logo {
+  width: 46px;
+  height: 46px;
+  background: var(--accent);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.card-logo span {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.card-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.card-sub {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+/* ── Back button ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  padding: 0;
+  transition: color .15s;
+}
+
+.back-btn:hover { color: var(--text-primary); }
+
+.back-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Banners ── */
+.banner {
+  border-radius: var(--radius-md);
+  padding: 10px 13px;
+  font-size: 13px;
+  margin-bottom: 1.25rem;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner.error {
+  background: var(--danger-bg);
+  border: 0.5px solid var(--danger-border);
+  color: var(--danger-text);
+}
+
+.banner.success {
+  background: var(--success-bg);
+  border: 0.5px solid var(--success-border);
+  color: var(--success-text);
+}
+
+.banner svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ── Form fields ── */
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 13px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.field input::placeholder {
+  color: var(--text-muted);
+}
+
+.field input:hover {
+  border-color: rgba(0,0,0,0.3);
+}
+
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26,26,46,0.08);
+}
+
+.field input.err {
+  border-color: #e0443a;
+  box-shadow: none;
+}
+
+/* ── Password wrapper ── */
+.pw-wrap {
+  position: relative;
+}
+
+.pw-wrap input {
+  padding-right: 42px;
+}
+
+.pw-toggle {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color .15s;
+}
+
+.pw-toggle:hover { color: var(--text-secondary); }
+
+.pw-toggle svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Inline field error ── */
+.field-err {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--danger-text);
+  margin-top: 5px;
+}
+
+.field-err svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ── Forgot password row ── */
+.forgot-row {
+  text-align: right;
+  margin-top: 6px;
+  margin-bottom: 1rem;
+}
+
+/* ── Password strength bar ── */
+.strength-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.s-seg {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.09);
+  transition: background .2s;
+}
+
+.pw-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  min-height: 16px;
+}
+
+/* ── Primary button ── */
+.btn-primary {
+  width: 100%;
+  padding: 11px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background .15s, transform .1s;
+}
+
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 1.4rem 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 0.5px;
+  background: var(--border);
+}
+
+/* ── Link buttons ── */
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--info-text);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity .15s;
+}
+
+.link-btn:hover { opacity: 0.75; }
+
+/* ── Card footer ── */
+.card-footer {
+  text-align: center;
+  margin-top: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ── Page footer ── */
+.page-footer {
+  margin-top: 2rem;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
