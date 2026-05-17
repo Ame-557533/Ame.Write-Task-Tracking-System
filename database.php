@@ -2,7 +2,7 @@
 // DATABASE CREDENTIALS
 $host     = getenv('MYSQLHOST')     ?: 'localhost';
 $port     = getenv('MYSQLPORT')     ?: '3306';
-$dbname   = getenv('MYSQLDATABASE') ?: 'ims_db';
+$dbname   = getenv('MYSQLDATABASE') ?: 'ameco_db';
 $username = getenv('MYSQLUSER')     ?: 'root';
 $password = getenv('MYSQLPASSWORD') ?: '';
 
