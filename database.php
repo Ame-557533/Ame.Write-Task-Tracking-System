@@ -1,11 +1,9 @@
 <?php
-// ══════════════════════════════════════════════════════
 //  Ame Co. Tasks — Database Connection
 //  File: database.php
 //
 //  For localhost:  fill in the credentials below.
 //  For deployment: replace with your hosting credentials.
-// ══════════════════════════════════════════════════════
 
 define('DB_HOST',     'localhost');
 define('DB_PORT',     '3306');
@@ -14,7 +12,7 @@ define('DB_USER',     'root');       // change on deployment
 define('DB_PASSWORD', '');           // change on deployment
 define('DB_CHARSET',  'utf8mb4');
 
-// ── Create connection ──
+//Create connection
 function getDB(): PDO {
     static $pdo = null;
 

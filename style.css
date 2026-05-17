@@ -1,7 +1,7 @@
-/* ── Reset ── */
+/*Reset*/
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── Tokens ── */
+/*Tokens*/
 :root {
   --bg:            #EFECE6;
   --surface:       #FAFAF8;
@@ -31,7 +31,7 @@
   --sidebar-w:     240px;
 }
 
-/* ── Base ── */
+/*Base*/
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg);
@@ -42,9 +42,7 @@ body {
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; cursor: pointer; }
 
-/* ════════════════════════════════════════
-   AUTH LAYOUT  (register / login / forgot)
-════════════════════════════════════════ */
+/*AUTH LAYOUT  (register / login / forgot)*/
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -53,7 +51,7 @@ button { font-family: inherit; cursor: pointer; }
   justify-content: center;
   padding: 2rem 1rem 3rem;
   background: var(--bg);
-  /* subtle grain */
+  /*subtle grain*/
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
@@ -120,7 +118,7 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--ink-3);
 }
 
-/* ── Back link ── */
+/*Back link*/
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -136,9 +134,7 @@ button { font-family: inherit; cursor: pointer; }
 .back-link:hover { color: var(--ink); }
 .back-link svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-/* ════════════════════════════════════════
-   FORM COMPONENTS  (shared auth + modals)
-════════════════════════════════════════ */
+/*FORM COMPONENTS  (shared auth + modals)*/
 .field { margin-bottom: 1rem; }
 
 .field label {
@@ -179,7 +175,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .field textarea { resize: vertical; min-height: 80px; }
 
-/* password toggle */
+/*password toggle*/
 .pw-wrap { position: relative; }
 .pw-wrap input { padding-right: 42px; }
 .pw-toggle {
@@ -191,7 +187,7 @@ button { font-family: inherit; cursor: pointer; }
 .pw-toggle:hover { color: var(--ink-2); }
 .pw-toggle svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-/* field error */
+/*field error*/
 .field-err {
   display: none;
   align-items: center;
@@ -202,12 +198,12 @@ button { font-family: inherit; cursor: pointer; }
 }
 .field-err svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
-/* strength bar */
+/*strength bar*/
 .strength-bar { display:flex; gap:4px; margin-top:6px; }
 .s-seg { height:3px; flex:1; border-radius:2px; background:var(--border-md); transition:background .2s; }
 .pw-hint { font-size:11.5px; color:var(--ink-3); margin-top:4px; min-height:16px; }
 
-/* banner */
+/*banner*/
 .banner {
   border-radius: var(--radius-md);
   padding: 10px 13px;
@@ -221,16 +217,14 @@ button { font-family: inherit; cursor: pointer; }
 .banner.success{ background: var(--green-light);  border: 1px solid rgba(26,158,106,0.2); color: var(--green); }
 .banner svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
-/* forgot row */
+/*forgot row*/
 .forgot-row { text-align: right; margin-top: 6px; margin-bottom: 1rem; }
 
-/* divider */
+/*divider*/
 .divider { display:flex; align-items:center; gap:10px; margin:1.4rem 0; font-size:12px; color:var(--ink-3); }
 .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
-/* ════════════════════════════════════════
-   BUTTONS
-════════════════════════════════════════ */
+/*BUTTONS*/
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -307,13 +301,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 .link-btn:hover { opacity: .75; }
 
-/* ════════════════════════════════════════
-   APP SHELL  (dashboard layout)
-════════════════════════════════════════ */
+/*APP SHELL  (dashboard layout)*/
 .app-page { display: none; }
 .app-page.active { display: flex; flex-direction: column; min-height: 100vh; }
 
-/* top nav */
+/*top nav*/
 .app-nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -381,14 +373,14 @@ button { font-family: inherit; cursor: pointer; }
 .nav-logout:hover { background: var(--red-light); color: var(--red); border-color: rgba(220,38,38,.2); }
 .nav-logout svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-/* ── Body layout ── */
+/*Body layout*/
 .app-body {
   display: flex;
   margin-top: var(--nav-h);
   min-height: calc(100vh - var(--nav-h));
 }
 
-/* sidebar */
+/*sidebar*/
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
@@ -442,14 +434,14 @@ button { font-family: inherit; cursor: pointer; }
 }
 .sidebar-link.active .sidebar-badge { background: rgba(255,255,255,0.2); color: #fff; }
 
-/* main content */
+/*main content*/
 .main-content {
   flex: 1;
   padding: 2rem 2.5rem;
   min-width: 0;
 }
 
-/* ── Page header ── */
+/*Page header*/
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -472,7 +464,7 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: 3px;
 }
 
-/* ── Stats row ── */
+/*Stats row*/
 .stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -507,7 +499,7 @@ button { font-family: inherit; cursor: pointer; }
 .stat-value.amber  { color: var(--amber); }
 .stat-value.accent { color: var(--accent); }
 
-/* ── Filter / toolbar ── */
+/*Filter / toolbar*/
 .toolbar {
   display: flex;
   align-items: center;
@@ -565,7 +557,7 @@ button { font-family: inherit; cursor: pointer; }
 .filter-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); font-weight: 500; }
 .filter-tab:hover:not(.active) { background: rgba(0,0,0,.04); }
 
-/* ── Task list ── */
+/*Task list*/
 .task-list {
   display: flex;
   flex-direction: column;
@@ -590,7 +582,7 @@ button { font-family: inherit; cursor: pointer; }
 .task-card.done { opacity: .55; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--ink-2); }
 
-/* checkbox */
+/*checkbox*/
 .task-check {
   width: 20px; height: 20px;
   border-radius: 6px;
@@ -635,7 +627,7 @@ button { font-family: inherit; cursor: pointer; }
   -webkit-box-orient: vertical;
 }
 
-/* priority badge */
+/*priority badge*/
 .badge {
   display: inline-flex;
   align-items: center;
@@ -668,7 +660,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .task-card:hover .task-actions { opacity: 1; }
 
-/* ── Empty state ── */
+/*Empty state*/
 .empty-state {
   text-align: center;
   padding: 5rem 2rem;
@@ -678,9 +670,7 @@ button { font-family: inherit; cursor: pointer; }
 .empty-state h3 { font-size:17px; color:var(--ink-2); margin-bottom:6px; }
 .empty-state p  { font-size:13.5px; }
 
-/* ════════════════════════════════════════
-   MODAL
-════════════════════════════════════════ */
+/*MODAL*/
 .modal-backdrop {
   display: none;
   position: fixed; inset: 0;
@@ -746,7 +736,7 @@ button { font-family: inherit; cursor: pointer; }
 .modal-footer .btn-accent { flex: none; width: auto; }
 .modal-footer .btn-ghost  { flex: none; }
 
-/* confirm modal */
+/*confirm modal*/
 .confirm-body { text-align: center; padding: .5rem 0 1rem; }
 .confirm-body .confirm-icon {
   width: 52px; height: 52px;
@@ -765,9 +755,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .btn-danger:hover { opacity: .88; }
 
-/* ════════════════════════════════════════
-   TOAST
-════════════════════════════════════════ */
+/*TOAST*/
 .toast-container {
   position: fixed; bottom: 1.5rem; right: 1.5rem;
   display: flex; flex-direction: column; gap: .5rem;
@@ -790,9 +778,7 @@ button { font-family: inherit; cursor: pointer; }
 .toast.success { background: var(--green); }
 .toast.error   { background: var(--red); }
 
-/* ════════════════════════════════════════
-   SKELETON LOADERS
-════════════════════════════════════════ */
+/* SKELETON LOADERS*/
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
   100% { background-position:  400px 0; }

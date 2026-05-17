@@ -11,9 +11,7 @@
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     INLINE SVG ICON SYMBOLS
-══════════════════════════════════════════════════════ -->
+<!--INLINE SVG ICON SYMBOLS-->
 <svg style="display:none">
   <symbol id="i-eye"       viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-eye-off"   viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></symbol>
@@ -37,9 +35,7 @@
 </svg>
 
 
-<!-- ══════════════════════════════════════════════════════
-     PAGE 1 · REGISTER
-══════════════════════════════════════════════════════ -->
+<!--PAGE 1 · REGISTER-->
 <div id="page-register" class="auth-page">
 
   <div class="auth-brand">
@@ -111,9 +107,7 @@
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     PAGE 2 · LOGIN
-══════════════════════════════════════════════════════ -->
+<!--PAGE 2 · LOGIN-->
 <div id="page-login" class="auth-page" style="display:none">
 
   <div class="auth-brand">
@@ -161,9 +155,7 @@
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     PAGE 3 · FORGOT PASSWORD
-══════════════════════════════════════════════════════ -->
+<!--PAGE 3 · FORGOT PASSWORD-->
 <div id="page-forgot" class="auth-page" style="display:none">
 
   <div class="auth-brand">
@@ -197,12 +189,10 @@
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     PAGE 4 · DASHBOARD
-══════════════════════════════════════════════════════ -->
+<!--PAGE 4 · DASHBOARD-->
 <div id="page-dashboard" class="app-page" style="display:none">
 
-  <!-- Top nav -->
+  <!--Top nav-->
   <nav class="app-nav">
     <div class="app-nav-brand">
       <div class="mark"><span>A</span></div>
@@ -215,10 +205,10 @@
     </button>
   </nav>
 
-  <!-- Body -->
+  <!--Body-->
   <div class="app-body">
 
-    <!-- Sidebar -->
+    <!--Sidebar-->
     <aside class="sidebar">
       <span class="sidebar-label">Menu</span>
 
@@ -261,10 +251,10 @@
       </button>
     </aside>
 
-    <!-- Main -->
+    <!--Main-->
     <main class="main-content">
 
-      <!-- Page header -->
+      <!--Page header-->
       <div class="page-header">
         <div>
           <h2 id="view-title">All Tasks</h2>
@@ -276,7 +266,7 @@
         </button>
       </div>
 
-      <!-- Stats -->
+      <!--Stats-->
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-label">Total Tasks</div>
@@ -296,7 +286,7 @@
         </div>
       </div>
 
-      <!-- Toolbar -->
+      <!--Toolbar-->
       <div class="toolbar">
         <div class="toolbar-search">
           <svg><use href="#i-search"/></svg>
@@ -309,12 +299,12 @@
         </div>
       </div>
 
-      <!-- Task list -->
+      <!--Task list-->
       <div class="task-list" id="task-list">
-        <!-- rendered by JS -->
+        <!--rendered by JS-->
       </div>
 
-      <!-- Empty state (shown when list is empty) -->
+      <!--Empty state (shown when list is empty)-->
       <div class="empty-state" id="empty-state" style="display:none">
         <svg><use href="#i-tasks"/></svg>
         <h3>No tasks here yet</h3>
@@ -323,12 +313,10 @@
 
     </main>
   </div>
-</div><!-- /page-dashboard -->
+</div><!--/page-dashboard-->
 
 
-<!-- ══════════════════════════════════════════════════════
-     MODAL · ADD / EDIT TASK
-══════════════════════════════════════════════════════ -->
+<!--MODAL · ADD / EDIT TASK-->
 <div class="modal-backdrop" id="task-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
 
@@ -373,9 +361,7 @@
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     MODAL · CONFIRM DELETE
-══════════════════════════════════════════════════════ -->
+<!--MODAL · CONFIRM DELETE-->
 <div class="modal-backdrop" id="delete-modal">
   <div class="modal" style="max-width:380px" role="dialog" aria-modal="true" aria-labelledby="del-title">
 
@@ -402,19 +388,13 @@
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     TOAST CONTAINER
-══════════════════════════════════════════════════════ -->
+<!--TOAST CONTAINER-->
 <div class="toast-container" id="toast-container"></div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT-->
 <script>
-/* ────────────────────────────────────────────
-   STATE
-──────────────────────────────────────────── */
+/*STATE*/
 let currentUser  = null;   // { name, email, initials }
 let tasks        = [];     // array of task objects
 let editingId    = null;   // null = add mode, string = edit mode
@@ -422,7 +402,7 @@ let deleteTarget = null;   // id of task pending deletion
 let activeView   = 'all';  // sidebar filter
 let activeFilter = 'all';  // toolbar tab filter
 
-/* Demo credentials */
+/*Demo credentials*/
 const DEMO = { email: 'user@example.com', password: 'password123', name: 'Jane Smith' };
 
 /* Seed tasks */
@@ -432,9 +412,7 @@ const SEED_TASKS = [
   { id: uid(), title: 'Update team wiki',         desc: 'Add onboarding section.',               priority: 'low',    due: '2026-05-25', done: true  },
 ];
 
-/* ────────────────────────────────────────────
-   UTILS
-──────────────────────────────────────────── */
+/*UTILS*/
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 function initials(name) { return name.trim().split(' ').map(w=>w[0].toUpperCase()).slice(0,2).join(''); }
@@ -448,9 +426,7 @@ function isOverdue(iso) {
   return new Date(iso + 'T23:59:59') < new Date();
 }
 
-/* ────────────────────────────────────────────
-   PAGE NAVIGATION
-──────────────────────────────────────────── */
+/*PAGE NAVIGATION*/
 const AUTH_PAGES = ['register','login','forgot'];
 const ALL_PAGES  = [...AUTH_PAGES, 'dashboard'];
 
@@ -475,9 +451,7 @@ function showDashboard() {
   refreshDashboard();
 }
 
-/* ────────────────────────────────────────────
-   FORM HELPERS
-──────────────────────────────────────────── */
+/*FORM HELPERS*/
 function clearBanners() {
   document.querySelectorAll('.banner').forEach(el => {
     el.style.display = 'none';
@@ -528,9 +502,7 @@ function checkStrength(v, barId) {
   if (lbl) lbl.textContent = v.length ? labels[Math.min(score,3)] : '';
 }
 
-/* ────────────────────────────────────────────
-   AUTH ACTIONS
-──────────────────────────────────────────── */
+/*AUTH ACTIONS*/
 function doRegister() {
   clearBanners();
   const name = document.getElementById('reg-name').value.trim();
@@ -545,7 +517,7 @@ function doRegister() {
   else if (pw !== pw2)  { fieldErr('reg-pw2',   'reg-pw2-err',   'Passwords do not match.');          ok = false; }
   if (!ok) return;
 
-  /* In a real app: POST /api/register — here we just log in the user */
+  /*In a real app: POST /api/register — here we just log in the user*/
   currentUser = { name, email: em, initials: initials(name) };
   tasks = [...SEED_TASKS.map(t => ({...t, id: uid()}))];
   showBanner('reg-banner', 'success', 'Account created! Taking you to your dashboard…');
@@ -587,11 +559,9 @@ function doLogout() {
   toast('Logged out successfully.');
 }
 
-/* ────────────────────────────────────────────
-   DASHBOARD
-──────────────────────────────────────────── */
+/*DASHBOARD*/
 function refreshDashboard() {
-  /* nav user info */
+  /*nav user info*/
   document.getElementById('nav-user-name').textContent = currentUser.name;
   document.getElementById('nav-avatar').textContent    = currentUser.initials;
   updateStats();
@@ -619,7 +589,7 @@ function updateSidebarBadges() {
   document.getElementById('sb-low').textContent    = tasks.filter(t=>t.priority==='low').length;
 }
 
-/* ── Sidebar view ── */
+/*Sidebar view*/
 const VIEW_META = {
   all:    { title: 'All Tasks',    sub: 'Manage and track everything in one place.' },
   pending:{ title: 'Pending',      sub: 'Tasks still in progress.' },
@@ -639,7 +609,7 @@ function setView(v) {
   renderTasks();
 }
 
-/* ── Toolbar filter tab ── */
+/*Toolbar filter tab*/
 function setFilter(btn) {
   document.querySelectorAll('.filter-tab').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
@@ -647,18 +617,18 @@ function setFilter(btn) {
   renderTasks();
 }
 
-/* ── Render tasks ── */
+/*Render tasks*/
 function renderTasks() {
   const query = document.getElementById('search-input').value.toLowerCase();
 
   let list = tasks.filter(t => {
-    /* sidebar view filter */
+    /*sidebar view filter*/
     if (activeView === 'pending') return !t.done;
     if (activeView === 'done')    return t.done;
     if (['high','medium','low'].includes(activeView)) return t.priority === activeView;
-    return true; /* all */
+    return true; /*all*/
   }).filter(t => {
-    /* toolbar tab */
+    /*toolbar tab*/
     if (activeFilter === 'pending') return !t.done;
     if (activeFilter === 'done')    return t.done;
     return true;
@@ -717,9 +687,7 @@ function escHtml(s) {
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-/* ────────────────────────────────────────────
-   CRUD
-──────────────────────────────────────────── */
+/*CRUD*/
 function openAddModal() {
   editingId = null;
   document.getElementById('modal-title').textContent    = 'Add Task';
@@ -791,22 +759,18 @@ function confirmDelete() {
   refreshDashboard();
 }
 
-/* ────────────────────────────────────────────
-   MODAL HELPERS
-──────────────────────────────────────────── */
+/*MODAL HELPERS*/
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
-/* close modal on backdrop click */
+/*close modal on backdrop click*/
 document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
   backdrop.addEventListener('click', e => {
     if (e.target === backdrop) backdrop.classList.remove('open');
   });
 });
 
-/* ────────────────────────────────────────────
-   TOAST
-──────────────────────────────────────────── */
+/*TOAST*/
 function toast(msg, type = '') {
   const icon = type === 'success' ? '#i-check-c' : type === 'error' ? '#i-warn' : '#i-alert';
   const el = document.createElement('div');
