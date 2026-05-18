@@ -789,3 +789,68 @@ button { font-family: inherit; cursor: pointer; }
   animation: shimmer 1.4s infinite;
   border-radius: var(--radius-sm);
 }
+
+/* ── PHP server-side message classes ── */
+.php-error {
+  background: var(--red-light);
+  border: 1px solid rgba(220,38,38,0.2);
+  color: var(--red);
+  border-radius: var(--radius-md);
+  padding: 10px 13px;
+  font-size: 13px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.php-error svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+.php-success {
+  background: var(--green-light);
+  border: 1px solid rgba(26,158,106,0.2);
+  color: var(--green);
+  border-radius: var(--radius-md);
+  padding: 10px 13px;
+  font-size: 13px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.php-success svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+/* ── Dashboard body class ── */
+body.dashboard-body { display: flex; flex-direction: column; }
+
+/* ── Nav role badge ── */
+.nav-role-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* ── Nav user info group ── */
+.nav-user-info { display: flex; align-items: center; gap: 8px; }
+
+/* ── Logout as anchor ── */
+.nav-logout {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-md);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.nav-logout:hover { background: var(--red-light); color: var(--red); border-color: rgba(220,38,38,.2); }
+.nav-logout svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ── Select arrow ── */
+select { appearance: none; -webkit-appearance: none; }
