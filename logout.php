@@ -1,14 +1,12 @@
 <?php
 // ============================================================
-//  Ame Co. Workspace — logout.php
-//  Destroys the session and redirects to the login page.
-//  Link to this page from any "Log out" button/link.
+//  Ame Writer — logout.php
+//  Destroys session and redirects to login.
 // ============================================================
 session_start();
 session_unset();
 session_destroy();
 
-// Clear the session cookie
 if (ini_get('session.use_cookies')) {
     $params = session_get_cookie_params();
     setcookie(

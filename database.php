@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-//  Ame Co. Workspace — database.php
+//  Ame Writer — database.php
 //  Shared PDO connection. Include in every PHP page.
 //
 //  Localhost defaults are set below.
@@ -9,14 +9,14 @@
 
 define('DB_HOST',     'localhost');
 define('DB_PORT',     '3306');
-define('DB_NAME',     'ameco_db');
+define('DB_NAME',     'amewriter_db');
 define('DB_USER',     'root');
 define('DB_PASSWORD', '');           // change on deployment
 define('DB_CHARSET',  'utf8mb4');
 
 /**
  * Returns a singleton PDO instance.
- * Terminates with a 500 error on connection failure.
+ * Shows a friendly error page on connection failure.
  */
 function getDB(): PDO {
     static $pdo = null;
@@ -36,7 +36,6 @@ function getDB(): PDO {
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASSWORD, $options);
         } catch (PDOException $e) {
-            // Show a friendly error instead of a blank page
             http_response_code(500);
             die('
             <div style="font-family:sans-serif;max-width:500px;margin:80px auto;padding:2rem;
