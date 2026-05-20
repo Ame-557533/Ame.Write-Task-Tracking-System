@@ -140,6 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $toast = $safe_name . ' is already a collaborator.|error';
                 } else {
                     $db->prepare('INSERT INTO project_collaborators (project_id, user_id) VALUES (?,?)')->execute([$project_id, $collab_user['id']]);
+                    // Notify the added user
+                    $proj_title = $db->prepare('SELECT title FROM projects WHERE id=?');
+                    $proj_title->execute([$project_id]);
+                    $ptitle = $proj_title->fetchColumn();
+                    $msg = $_SESSION['user_name'] . ' added you to "' . $ptitle . '"';
+                    $db->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
+                       ->execute([$collab_user['id'], $user_id, $project_id, 'added_to_project', $msg]);
                     $safe_name = str_replace('|', '', htmlspecialchars($collab_user['name']));
                     $toast = $safe_name . ' added as collaborator!|success';
                 }
@@ -169,19 +176,23 @@ if (!empty($_GET['toast'])) {
     $toast = $_GET['toast'];
 }
 
-// ── Fetch projects the user is part of ───────────────────
+// ── Fetch ALL projects — mark membership ─────────────────
 $stmt = $db->prepare(
     'SELECT p.id, p.title, p.description AS `desc`, p.type, p.status,
             p.is_solo, p.due_date AS `due`, p.owner_id, p.created_at,
-            u.name AS owner_name
+            u.name AS owner_name,
+            MAX(CASE WHEN pc.user_id = ? THEN 1 ELSE 0 END) AS is_member
      FROM projects p
-     JOIN project_collaborators pc ON pc.project_id = p.id
      JOIN users u ON u.id = p.owner_id
-     WHERE pc.user_id = ?
-     ORDER BY p.status ASC, p.created_at DESC'
+     LEFT JOIN project_collaborators pc ON pc.project_id = p.id
+     GROUP BY p.id
+     ORDER BY is_member DESC, p.status ASC, p.created_at DESC'
 );
 $stmt->execute([$user_id]);
 $projects = $stmt->fetchAll();
+
+// Split for stats (only projects user is part of)
+$my_projects = array_filter($projects, fn($p) => $p['is_member']);
 
 // ── Collaborators per project ─────────────────────────────
 $project_ids = array_column($projects, 'id');
@@ -200,18 +211,18 @@ if ($project_ids) {
     }
 }
 
-// ── Stats ─────────────────────────────────────────────────
-$total      = count($projects);
-$complete   = count(array_filter($projects, fn($p) => $p['status'] === 'complete'));
-$in_prog    = count(array_filter($projects, fn($p) => $p['status'] === 'in_progress'));
-$draft      = count(array_filter($projects, fn($p) => $p['status'] === 'draft'));
-$collab_cnt = count(array_filter($projects, fn($p) => !$p['is_solo']));
+// ── Stats (based on user's own projects) ─────────────────
+$total      = count($my_projects);
+$complete   = count(array_filter($my_projects, fn($p) => $p['status'] === 'complete'));
+$in_prog    = count(array_filter($my_projects, fn($p) => $p['status'] === 'in_progress'));
+$draft      = count(array_filter($my_projects, fn($p) => $p['status'] === 'draft'));
+$collab_cnt = count(array_filter($my_projects, fn($p) => !$p['is_solo']));
 
 // ── Sidebar counts ─────────────────────────────────────────
 $sb = [
-    'all'      => $total,
-    'mine'     => count(array_filter($projects, fn($p) => $p['owner_id'] == $user_id)),
-    'collab'   => count(array_filter($projects, fn($p) => $p['owner_id'] != $user_id)),
+    'all'      => count($projects),
+    'mine'     => count(array_filter($my_projects, fn($p) => $p['owner_id'] == $user_id)),
+    'collab'   => count(array_filter($my_projects, fn($p) => $p['owner_id'] != $user_id)),
     'complete' => $complete,
     'draft'    => $draft + $in_prog,
 ];
@@ -268,27 +279,7 @@ function initials(string $name): string {
 </head>
 <body class="dashboard-body">
 
-<?php include 'icons.php'; ?>
-
-<!--Top nav-->
-<nav class="app-nav">
-  <a href="dashboard.php" class="app-nav-brand">
-    <div class="mark"><span>A</span></div>
-    Ame Writer
-  </a>
-  <div class="nav-user-info">
-    <span class="nav-role-badge"><?php
-      $role_labels = ['speechwriter'=>'Speech Writer','ghostwriter'=>'Ghostwriter','copywriter'=>'Copywriter','journalist'=>'Journalist'];
-      echo htmlspecialchars($role_labels[$_SESSION['user_role']] ?? ucfirst($_SESSION['user_role']));
-    ?></span>
-    <span class="nav-user-name"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
-    <div class="nav-avatar"><?= htmlspecialchars(initials($_SESSION['user_name'])) ?></div>
-  </div>
-  <a href="logout.php" class="nav-logout">
-    <svg><use href="#i-logout"/></svg>
-    Log out
-  </a>
-</nav>
+<?php include 'nav.php'; ?>
 
 <!--Body-->
 <div class="app-body">
@@ -312,6 +303,27 @@ function initials(string $name): string {
     <button class="sidebar-link" onclick="setView('complete',this)" type="button">
       <svg><use href="#i-done-tasks"/></svg> Complete <span class="sidebar-badge"><?= $sb['complete'] ?></span>
     </button>
+
+    <!--Bottom user panel (Claude-style)-->
+    <div class="sidebar-user-panel">
+      <a href="profile.php" class="sidebar-user-info">
+        <div class="sidebar-avatar"><?= htmlspecialchars(initials($_SESSION['user_name'])) ?></div>
+        <div class="sidebar-user-text">
+          <span class="sidebar-user-name"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+          <span class="sidebar-user-role"><?php
+            $rl = ['speechwriter'=>'Speech Writer','ghostwriter'=>'Ghostwriter','copywriter'=>'Copywriter','journalist'=>'Journalist'];
+            echo htmlspecialchars($rl[$_SESSION['user_role']] ?? ucfirst($_SESSION['user_role']));
+          ?></span>
+        </div>
+      </a>
+      <a href="settings.php" class="sidebar-icon-btn" title="Settings">
+        <svg><use href="#i-settings"/></svg>
+      </a>
+      <a href="logout.php" class="sidebar-logout-btn sidebar-logout-visible" title="Log out">
+        <svg><use href="#i-logout"/></svg>
+        <span>Log out</span>
+      </a>
+    </div>
   </aside>
 
   <!--Main-->
@@ -358,11 +370,13 @@ function initials(string $name): string {
         $collabs  = $collabs_map[$p['id']] ?? [];
         $complete = $p['status'] === 'complete';
       ?>
-      <div class="task-card project-card<?= $complete ? ' done' : '' ?>"
+      <?php $is_member = (bool)$p['is_member']; ?>
+      <div class="task-card project-card<?= $complete ? ' done' : '' ?><?= !$is_member ? ' read-only-card' : '' ?>"
            data-id="<?= $p['id'] ?>"
            data-owner="<?= $p['owner_id'] ?>"
            data-status="<?= htmlspecialchars($p['status']) ?>"
-           data-solo="<?= $p['is_solo'] ? '1' : '0' ?>">
+           data-solo="<?= $p['is_solo'] ? '1' : '0' ?>"
+           data-member="<?= $is_member ? '1' : '0' ?>">
 
         <!--Complete toggle — owner only-->
         <?php if ($is_owner): ?>
@@ -442,6 +456,19 @@ function initials(string $name): string {
 
         <!--Actions-->
         <div class="task-actions">
+          <!--View detail-->
+          <a href="project.php?id=<?= $p['id'] ?>" class="btn-icon" title="View project">
+            <svg><use href="#i-file-text"/></svg>
+          </a>
+
+          <?php if ($is_member): ?>
+          <!--Start Writing — members only-->
+          <button class="btn-icon start-writing-btn" title="Start Writing"
+                  onclick='openWritingModal(<?= $p["id"] ?>, <?= htmlspecialchars(json_encode($p["title"]), ENT_QUOTES) ?>)'
+                  type="button">
+            <svg><use href="#i-pen"/></svg>
+          </button>
+
           <!--Edit — available to all collaborators-->
           <button class="btn-icon"
                   onclick='openEditModal(<?= $p["id"] ?>, <?= htmlspecialchars(json_encode([
@@ -471,6 +498,13 @@ function initials(string $name): string {
                   style="color:var(--red);border-color:rgba(220,38,38,.2)">
             <svg><use href="#i-trash"/></svg>
           </button>
+          <?php endif; ?>
+          <?php else: ?>
+          <!--Read-only badge for non-members-->
+          <span class="badge read-only-badge">
+            <svg style="width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5"><use href="#i-lock"/></svg>
+            View only
+          </span>
           <?php endif; ?>
         </div>
       </div>
@@ -560,29 +594,28 @@ function initials(string $name): string {
       </button>
     </div>
 
-    <!--Add collaborator-->
+    <!--Add collaborator with live search-->
     <form method="POST" action="dashboard.php" id="collab-form">
       <input type="hidden" name="action"     value="add_collab">
       <input type="hidden" name="project_id" id="collab-project-id" value="">
+      <input type="hidden" name="collab_email" id="collab-email-hidden" value="">
 
       <div class="field">
-        <label for="collab-email">Add collaborator by email</label>
-        <div style="display:flex;gap:.5rem">
-          <input type="email" id="collab-email" name="collab_email"
-                 placeholder="colleague@amewriter.com" list="users-datalist" />
-          <button class="btn-accent" type="submit" style="white-space:nowrap;flex-shrink:0">
-            <svg style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><use href="#i-plus"/></svg>
-            Add
-          </button>
+        <label for="collab-search">Add collaborator</label>
+        <div style="position:relative">
+          <input type="text" id="collab-search" autocomplete="off"
+                 placeholder="Search by name or email…"
+                 oninput="searchCollabs(this.value)"
+                 onfocus="searchCollabs(this.value)" />
+          <div id="collab-dropdown" class="collab-dropdown" style="display:none"></div>
         </div>
-        <datalist id="users-datalist">
-          <?php foreach ($all_users as $u): ?>
-          <?php if ($u['id'] !== $user_id): ?>
-          <option value="<?= htmlspecialchars($u['email']) ?>"><?= htmlspecialchars($u['name']) ?> — <?= htmlspecialchars(ucfirst($u['role'])) ?></option>
-          <?php endif; ?>
-          <?php endforeach; ?>
-        </datalist>
+        <div id="collab-selected" class="collab-selected-user" style="display:none"></div>
       </div>
+      <button class="btn-accent" type="submit" id="collab-add-btn" disabled
+              style="width:100%">
+        <svg style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><use href="#i-plus"/></svg>
+        Add Collaborator
+      </button>
     </form>
 
     <!--Current collaborators list-->
@@ -624,6 +657,44 @@ function initials(string $name): string {
   </div>
 </div>
 
+
+<!--MODAL · START WRITING (Notepad)-->
+<div class="modal-backdrop" id="writing-modal">
+  <div class="modal modal-notepad" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 id="writing-modal-title">Start Writing</h3>
+        <p id="writing-modal-sub" style="font-size:12.5px;color:var(--ink-3);margin-top:2px"></p>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <span id="writing-save-status" class="writing-save-status"></span>
+        <button class="modal-close" onclick="closeWritingModal()" type="button" aria-label="Close">
+          <svg><use href="#i-x"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="writing-toolbar">
+      <button type="button" onclick="wFmt('bold')"      title="Bold"><strong>B</strong></button>
+      <button type="button" onclick="wFmt('italic')"    title="Italic"><em>I</em></button>
+      <button type="button" onclick="wFmt('underline')" title="Underline"><u>U</u></button>
+      <div class="writing-toolbar-sep"></div>
+      <button type="button" onclick="wBlock('h2')"      title="Heading">H</button>
+      <button type="button" onclick="wBlock('p')"       title="Paragraph">¶</button>
+      <div class="writing-toolbar-sep"></div>
+      <span id="writing-wordcount" class="writing-wordcount">0 words</span>
+    </div>
+    <div id="writing-area" class="writing-area" contenteditable="true"
+         data-placeholder="Start writing your project here…"
+         oninput="onWritingInput()"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeWritingModal()" type="button">Close</button>
+      <button class="btn-accent" type="button" onclick="saveWriting()" id="writing-save-btn">
+        <svg style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><use href="#i-check"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+</div>
 
 <!--TOAST CONTAINER-->
 <div class="toast-container" id="toast-container"></div>
@@ -729,14 +800,15 @@ function openEditModal(id, data) {
 /* ── Collaborator modal ── */
 function openCollabModal(projectId, collabs) {
   document.getElementById('collab-project-id').value = projectId;
-  document.getElementById('collab-email').value      = '';
+  document.getElementById('collab-search').value     = '';
+  clearCollab();
 
   const container = document.getElementById('collab-list-container');
   if (!collabs || collabs.length === 0) {
     container.innerHTML = '<p style="font-size:13px;color:var(--ink-3);padding:.5rem 0">No collaborators yet.</p>';
   } else {
     container.innerHTML = collabs.map(c => `
-      <div class="collab-row">
+      <div class="collab-row" data-uid="${c.id}">
         <div class="collab-avatar sm">${esc(initials(c.name))}</div>
         <div class="collab-info">
           <span class="collab-name">${esc(c.name)}</span>
@@ -808,6 +880,154 @@ function toast(msg, type) {
   el.innerHTML = `<svg><use href="${icon}"/></svg>${msg}`;
   document.getElementById('toast-container').appendChild(el);
   setTimeout(() => el.remove(), 3200);
+}
+
+/* ════════════════════════════════
+   COLLAB LIVE SEARCH
+════════════════════════════════ */
+const ALL_USERS = <?= json_encode(array_values(array_filter($all_users, fn($u) => $u['id'] != $user_id))) ?>;
+let selectedCollabEmail = '';
+
+function searchCollabs(q) {
+  const drop = document.getElementById('collab-dropdown');
+  q = q.trim().toLowerCase();
+  if (!q) { drop.style.display = 'none'; return; }
+
+  // Filter users not already in current collab list
+  const currentIds = Array.from(document.querySelectorAll('#collab-list-container .collab-row'))
+    .map(r => parseInt(r.dataset.uid || 0));
+
+  const matches = ALL_USERS.filter(u =>
+    (u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) &&
+    !currentIds.includes(u.id)
+  ).slice(0, 6);
+
+  if (!matches.length) {
+    drop.innerHTML = '<div class="collab-drop-empty">No users found</div>';
+    drop.style.display = 'block';
+    return;
+  }
+
+  drop.innerHTML = matches.map(u => `
+    <div class="collab-drop-item" onclick="selectCollab('${esc(u.email)}','${esc(u.name)}','${esc(u.role)}')">
+      <div class="collab-avatar sm" style="width:28px;height:28px;font-size:10px;border:none">${esc(initials(u.name))}</div>
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink)">${esc(u.name)}</div>
+        <div style="font-size:11.5px;color:var(--ink-3)">${esc(u.email)} · ${esc(cap(u.role))}</div>
+      </div>
+    </div>`).join('');
+  drop.style.display = 'block';
+}
+
+function selectCollab(email, name, role) {
+  selectedCollabEmail = email;
+  document.getElementById('collab-email-hidden').value = email;
+  document.getElementById('collab-search').value = '';
+  document.getElementById('collab-dropdown').style.display = 'none';
+  document.getElementById('collab-add-btn').disabled = false;
+
+  const sel = document.getElementById('collab-selected');
+  sel.style.display = 'flex';
+  sel.innerHTML = `
+    <div class="collab-avatar sm" style="width:28px;height:28px;font-size:10px;border:none">${esc(initials(name))}</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:500">${esc(name)}</div>
+      <div style="font-size:11.5px;color:var(--ink-3)">${esc(email)}</div>
+    </div>
+    <button type="button" onclick="clearCollab()" class="btn-icon" style="width:24px;height:24px;color:var(--ink-3)">
+      <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><use href="#i-x"/></svg>
+    </button>`;
+}
+
+function clearCollab() {
+  selectedCollabEmail = '';
+  document.getElementById('collab-email-hidden').value = '';
+  document.getElementById('collab-search').value = '';
+  document.getElementById('collab-selected').style.display = 'none';
+  document.getElementById('collab-add-btn').disabled = true;
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#collab-search') && !e.target.closest('#collab-dropdown')) {
+    const d = document.getElementById('collab-dropdown');
+    if (d) d.style.display = 'none';
+  }
+});
+
+/* ════════════════════════════════
+   WRITING NOTEPAD
+════════════════════════════════ */
+let writingProjectId = null;
+let writingSaveTimer = null;
+
+async function openWritingModal(projectId, title) {
+  writingProjectId = projectId;
+  document.getElementById('writing-modal-title').textContent = title;
+  document.getElementById('writing-modal-sub').textContent   = 'Auto-saves as you type';
+  document.getElementById('writing-save-status').textContent = '';
+  document.getElementById('writing-area').innerHTML          = '';
+  document.getElementById('writing-wordcount').textContent   = '0 words';
+  openModal('writing-modal');
+
+  // Load existing content
+  try {
+    const res  = await fetch(`writing.php?action=load&project_id=${projectId}`);
+    const data = await res.json();
+    if (data.content) {
+      document.getElementById('writing-area').innerHTML = data.content;
+      updateWordCount();
+    }
+  } catch(e) { /* first time — no content yet */ }
+}
+
+function closeWritingModal() {
+  if (writingSaveTimer) clearTimeout(writingSaveTimer);
+  saveWriting();
+  closeModal('writing-modal');
+  writingProjectId = null;
+}
+
+function onWritingInput() {
+  updateWordCount();
+  document.getElementById('writing-save-status').textContent = 'Unsaved…';
+  if (writingSaveTimer) clearTimeout(writingSaveTimer);
+  writingSaveTimer = setTimeout(saveWriting, 1500);
+}
+
+async function saveWriting() {
+  if (!writingProjectId) return;
+  const content = document.getElementById('writing-area').innerHTML;
+  try {
+    const res = await fetch('writing.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=save&project_id=${writingProjectId}&content=${encodeURIComponent(content)}`
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('writing-save-status').textContent = 'Saved ✓';
+      setTimeout(() => {
+        const s = document.getElementById('writing-save-status');
+        if (s && s.textContent === 'Saved ✓') s.textContent = '';
+      }, 2000);
+    }
+  } catch(e) {}
+}
+
+function updateWordCount() {
+  const text  = document.getElementById('writing-area').innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  document.getElementById('writing-wordcount').textContent = words + ' word' + (words !== 1 ? 's' : '');
+}
+
+function wFmt(cmd) {
+  document.getElementById('writing-area').focus();
+  document.execCommand(cmd, false, null);
+}
+function wBlock(tag) {
+  document.getElementById('writing-area').focus();
+  document.execCommand('formatBlock', false, tag);
 }
 </script>
 
