@@ -12,15 +12,28 @@ $role_labels = [
     'journalist'   => 'Journalist',
 ];
 
-// Unread notification count
-$_unread = 0;
+// Unread notification count + user theme preference
+$_unread    = 0;
+$_nav_theme = 'light';
 try {
     $_db_nav   = getDB();
     $_stmt_nav = $_db_nav->prepare('SELECT COUNT(*) FROM notifications WHERE user_id=? AND is_read=0');
     $_stmt_nav->execute([$_SESSION['user_id']]);
     $_unread   = (int) $_stmt_nav->fetchColumn();
+
+    // Load saved theme preference
+    $_stmt_theme = $_db_nav->prepare('SELECT settings FROM users WHERE id=?');
+    $_stmt_theme->execute([$_SESSION['user_id']]);
+    $_settings_raw = $_stmt_theme->fetchColumn();
+    if ($_settings_raw) {
+        $_settings_arr = json_decode($_settings_raw, true) ?: [];
+        if (($_settings_arr['theme'] ?? 'light') === 'dark') {
+            $_nav_theme = 'dark';
+        }
+    }
 } catch (PDOException $e) {
-    $_unread = 0; // notifications table may not exist yet
+    $_unread    = 0;
+    $_nav_theme = 'light';
 }
 
 function nav_initials(string $name): string {
@@ -31,6 +44,7 @@ function nav_initials(string $name): string {
 }
 ?>
 <?php include 'icons.php'; ?>
+<script>document.documentElement.setAttribute('data-theme','<?= $_nav_theme ?>');</script>
 
 <nav class="app-nav">
   <a href="dashboard.php" class="app-nav-brand">

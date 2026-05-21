@@ -1,7 +1,7 @@
 <?php
 // ============================================================
 //  Ame Writer — settings.php
-//  Account settings: preferences, notifications, danger zone.
+//  Account settings: appearance, notifications, danger zone.
 // ============================================================
 session_start();
 if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
@@ -21,27 +21,30 @@ $user = $stmt->fetch();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    // ── Save notification preferences ─────────────────────
-    if ($action === 'save_notifications') {
-        $notif_added    = isset($_POST['notif_added'])    ? 1 : 0;
-        $notif_status   = isset($_POST['notif_status'])   ? 1 : 0;
-        $notif_removed  = isset($_POST['notif_removed'])  ? 1 : 0;
-        $notif_complete = isset($_POST['notif_complete'])  ? 1 : 0;
+    // ── Save preferences (theme + notifications toggle) ───
+    if ($action === 'save_preferences') {
+        $notif_enabled = isset($_POST['notif_enabled']) ? 1 : 0;
+        $theme         = in_array($_POST['theme'] ?? '', ['light','dark']) ? $_POST['theme'] : 'light';
 
-        // Store as JSON in a settings column (add if not present yet)
         $prefs = json_encode([
-            'notif_added'    => $notif_added,
-            'notif_status'   => $notif_status,
-            'notif_removed'  => $notif_removed,
-            'notif_complete' => $notif_complete,
+            'notif_enabled' => $notif_enabled,
+            'theme'         => $theme,
         ]);
+
+        // Ensure columns exist — safe to run every time
+        try { $db->exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS settings TEXT NULL DEFAULT NULL'); }
+        catch (PDOException $e) {}
+        try { $db->exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at DATETIME NULL DEFAULT NULL'); }
+        catch (PDOException $e) {}
+        try { $db->exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1'); }
+        catch (PDOException $e) {}
+
         try {
             $db->prepare('UPDATE users SET settings=?, updated_at=NOW() WHERE id=?')
                ->execute([$prefs, $user_id]);
-            $success = 'Notification preferences saved.';
+            $success = 'Preferences saved.';
         } catch (PDOException $e) {
-            // Column may not exist yet — gracefully ignore
-            $success = 'Preferences noted (settings column not yet in DB).';
+            $error = 'Could not save preferences: ' . htmlspecialchars($e->getMessage());
         }
 
     // ── Delete account ────────────────────────────────────
@@ -50,9 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($confirm_text !== 'DELETE') {
             $error = 'Please type DELETE exactly to confirm.';
         } else {
-            // Transfer owned projects to no one (or soft-delete)
+            try { $db->exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1'); }
+            catch (PDOException $e) {}
             $db->prepare('DELETE FROM project_collaborators WHERE user_id=?')->execute([$user_id]);
-            $db->prepare('UPDATE users SET is_active=0, updated_at=NOW() WHERE id=?')->execute([$user_id]);
+            $db->prepare('UPDATE users SET is_active=0 WHERE id=?')->execute([$user_id]);
             session_unset(); session_destroy();
             header('Location: login.php');
             exit;
@@ -62,15 +66,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Parse existing prefs
 $prefs_raw = $user['settings'] ?? '{}';
-$prefs = json_decode($prefs_raw, true) ?: [];
-$pref = fn($key, $default=1) => isset($prefs[$key]) ? (int)$prefs[$key] : $default;
+$prefs     = json_decode($prefs_raw, true) ?: [];
+$notif_enabled = isset($prefs['notif_enabled']) ? (int)$prefs['notif_enabled'] : 1;
+$theme         = ($prefs['theme'] ?? 'light') === 'dark' ? 'dark' : 'light';
 
-$role_labels = ['speechwriter'=>'Speech Writer','ghostwriter'=>'Ghostwriter','copywriter'=>'Copywriter','journalist'=>'Journalist'];
+$role_labels = [
+    'speechwriter' => 'Speech Writer',
+    'ghostwriter'  => 'Ghostwriter',
+    'copywriter'   => 'Copywriter',
+    'journalist'   => 'Journalist',
+];
 
 function s_initials(string $name): string {
     $parts = explode(' ', trim($name));
-    $i = strtoupper(substr($parts[0],0,1));
-    if (count($parts)>1) $i .= strtoupper(substr($parts[count($parts)-1],0,1));
+    $i = strtoupper(substr($parts[0], 0, 1));
+    if (count($parts) > 1) $i .= strtoupper(substr($parts[count($parts)-1], 0, 1));
     return $i;
 }
 ?>
@@ -126,51 +136,57 @@ function s_initials(string $name): string {
       </div>
     </div>
 
-    <!-- Notification preferences -->
+    <!-- Preferences: theme + notifications in one form -->
     <div class="profile-section">
-      <h3 class="profile-section-title">Notification Preferences</h3>
-      <p style="font-size:13px;color:var(--ink-3);margin-bottom:1rem">Choose which events trigger in-app notifications.</p>
-      <form method="POST" action="settings.php">
-        <input type="hidden" name="action" value="save_notifications">
-        <div class="settings-toggle-list">
-          <label class="settings-toggle">
-            <div>
-              <div class="settings-toggle-title">Added to a project</div>
-              <div class="settings-toggle-sub">When someone adds you as a collaborator.</div>
-            </div>
-            <input type="checkbox" name="notif_added" value="1" <?= $pref('notif_added') ? 'checked' : '' ?> />
-            <span class="toggle-track"></span>
-          </label>
-          <label class="settings-toggle">
-            <div>
-              <div class="settings-toggle-title">Status changes</div>
-              <div class="settings-toggle-sub">When a project's status is updated by a collaborator.</div>
-            </div>
-            <input type="checkbox" name="notif_status" value="1" <?= $pref('notif_status') ? 'checked' : '' ?> />
-            <span class="toggle-track"></span>
-          </label>
-          <label class="settings-toggle">
-            <div>
-              <div class="settings-toggle-title">Removed from a project</div>
-              <div class="settings-toggle-sub">When an owner removes you from a project.</div>
-            </div>
-            <input type="checkbox" name="notif_removed" value="1" <?= $pref('notif_removed') ? 'checked' : '' ?> />
-            <span class="toggle-track"></span>
-          </label>
-          <label class="settings-toggle">
-            <div>
-              <div class="settings-toggle-title">Project completed</div>
-              <div class="settings-toggle-sub">When a project you're on is marked complete.</div>
-            </div>
-            <input type="checkbox" name="notif_complete" value="1" <?= $pref('notif_complete') ? 'checked' : '' ?> />
+      <h3 class="profile-section-title">Preferences</h3>
+      <form method="POST" action="settings.php" id="prefs-form">
+        <input type="hidden" name="action" value="save_preferences">
+
+        <!-- Theme -->
+        <div class="pref-row">
+          <div class="pref-row-label">
+            <div class="settings-toggle-title">Appearance</div>
+            <div class="settings-toggle-sub">Choose your preferred color theme.</div>
+          </div>
+          <div class="theme-picker">
+            <label class="theme-option">
+              <input type="radio" name="theme" value="light" <?= $theme === 'light' ? 'checked' : '' ?> onchange="applyThemePreview('light')">
+              <span class="theme-swatch theme-swatch-light">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                Light
+              </span>
+            </label>
+            <label class="theme-option">
+              <input type="radio" name="theme" value="dark" <?= $theme === 'dark' ? 'checked' : '' ?> onchange="applyThemePreview('dark')">
+              <span class="theme-swatch theme-swatch-dark">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                Dark
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="pref-divider"></div>
+
+        <!-- Notifications master toggle -->
+        <div class="pref-row">
+          <div class="pref-row-label">
+            <div class="settings-toggle-title">Notifications</div>
+            <div class="settings-toggle-sub">Receive in-app notifications for project activity.</div>
+          </div>
+          <label class="settings-toggle-inline">
+            <input type="checkbox" name="notif_enabled" value="1" id="notif-toggle" <?= $notif_enabled ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
           </label>
         </div>
-        <button class="btn-accent" type="submit" style="width:auto;margin-top:1rem">Save Preferences</button>
+
+        <div style="margin-top:1.25rem">
+          <button class="btn-accent" type="submit" style="width:auto">Save Preferences</button>
+        </div>
       </form>
     </div>
 
-    <!-- App info -->
+    <!-- About -->
     <div class="profile-section">
       <h3 class="profile-section-title">About</h3>
       <div class="pdc-grid" style="gap:.5rem">
@@ -196,7 +212,9 @@ function s_initials(string $name): string {
       <p style="font-size:13px;color:var(--ink-2);margin-bottom:1rem">
         Deleting your account will deactivate it and remove you from all projects. This action cannot be undone.
       </p>
-      <button class="btn-ghost" type="button" onclick="document.getElementById('delete-panel').style.display='block';this.style.display='none'"
+      <button class="btn-ghost" type="button"
+              id="show-delete-btn"
+              onclick="document.getElementById('delete-panel').style.display='block';this.style.display='none'"
               style="color:var(--red);border-color:rgba(220,38,38,.3)">
         <svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><use href="#i-trash"/></svg>
         Delete my account
@@ -210,7 +228,10 @@ function s_initials(string $name): string {
           </div>
           <div style="display:flex;gap:.5rem">
             <button class="btn-danger" type="submit">Permanently delete account</button>
-            <button class="btn-ghost" type="button" onclick="document.getElementById('delete-panel').style.display='none';document.querySelector('[onclick*=delete-panel]').style.display=''">Cancel</button>
+            <button class="btn-ghost" type="button"
+                    onclick="document.getElementById('delete-panel').style.display='none';document.getElementById('show-delete-btn').style.display=''">
+              Cancel
+            </button>
           </div>
         </form>
       </div>
@@ -218,6 +239,13 @@ function s_initials(string $name): string {
 
   </main>
 </div>
+
+<script>
+// Live theme preview before form save
+function applyThemePreview(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+}
+</script>
 
 </body>
 </html>

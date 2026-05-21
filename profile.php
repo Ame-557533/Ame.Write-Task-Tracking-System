@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->fetch()) {
                 $error = 'That email is already in use by another account.';
             } else {
-                $db->prepare('UPDATE users SET name=?, email=?, role=?, updated_at=NOW() WHERE id=?')
+                $db->prepare('UPDATE users SET name=?, email=?, role=? WHERE id=?')
                    ->execute([$name, $email, $role, $user_id]);
                 // Update session
                 $_SESSION['user_name']  = $name;
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'New passwords do not match.';
         } else {
             $hash = password_hash($new_pw, PASSWORD_BCRYPT);
-            $db->prepare('UPDATE users SET password_hash=?, updated_at=NOW() WHERE id=?')
+            $db->prepare('UPDATE users SET password_hash=? WHERE id=?')
                ->execute([$hash, $user_id]);
             $success = 'Password changed successfully.';
         }

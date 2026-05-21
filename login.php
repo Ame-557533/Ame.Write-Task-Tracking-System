@@ -28,9 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please enter a valid email address.';
     } else {
         $db   = getDB();
-        $stmt = $db->prepare('SELECT id, name, email, role, password_hash FROM users WHERE email = ? AND is_active = 1');
+        $stmt = $db->prepare('SELECT id, name, email, role, password_hash FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch();
+
+        // Reject deactivated accounts if is_active column exists
+        if ($user && isset($user['is_active']) && $user['is_active'] == 0) {
+            $user = null;
+        }
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
             $error = 'Incorrect email or password. Please try again.';

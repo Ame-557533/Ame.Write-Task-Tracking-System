@@ -60,19 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type  = $_POST['type']         ?? 'other';
         $due   = $_POST['due']          ?? null;
 
-        // Only collaborators can edit
-        $stmt = $db->prepare(
-            'SELECT p.id FROM projects p
-             JOIN project_collaborators pc ON pc.project_id = p.id
-             WHERE p.id = ? AND pc.user_id = ?'
-        );
+        // Owner only can edit
+        $stmt = $db->prepare('SELECT id FROM projects WHERE id=? AND owner_id=?');
         $stmt->execute([$id, $user_id]);
 
         if ($stmt->fetch() && !empty($title)) {
             $allowed_types = ['essay','journal','speech','article','blog','report','other'];
             if (!in_array($type, $allowed_types)) $type = 'other';
             $stmt = $db->prepare(
-                'UPDATE projects SET title=?, description=?, type=?, due_date=?, updated_at=NOW()
+                'UPDATE projects SET title=?, description=?, type=?, due_date=?
                  WHERE id=?'
             );
             $stmt->execute([$title, $desc, $type, $due ?: null, $id]);
@@ -97,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare('SELECT id FROM projects WHERE id=? AND owner_id=?');
         $stmt->execute([$id, $user_id]);
         if ($stmt->fetch()) {
-            $db->prepare('UPDATE projects SET status=?, updated_at=NOW() WHERE id=?')->execute(['complete', $id]);
+            $db->prepare('UPDATE projects SET status=? WHERE id=?')->execute(['complete', $id]);
             $toast = 'Project marked complete!|success';
         } else {
             $toast = 'Only the project owner can mark this complete.|error';
@@ -109,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare('SELECT id FROM projects WHERE id=? AND owner_id=?');
         $stmt->execute([$id, $user_id]);
         if ($stmt->fetch()) {
-            $db->prepare('UPDATE projects SET status=?, updated_at=NOW() WHERE id=?')->execute(['in_progress', $id]);
+            $db->prepare('UPDATE projects SET status=? WHERE id=?')->execute(['in_progress', $id]);
             $toast = 'Project reopened.|success';
         }
 
@@ -123,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$project_id, $user_id]);
         if ($stmt->fetch()) {
             // Find user by email
-            $stmt = $db->prepare('SELECT id, name FROM users WHERE email=? AND is_active=1');
+            $stmt = $db->prepare('SELECT id, name FROM users WHERE email=?');
             $stmt->execute([$collab_email]);
             $collab_user = $stmt->fetch();
 
@@ -145,8 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $proj_title->execute([$project_id]);
                     $ptitle = $proj_title->fetchColumn();
                     $msg = $_SESSION['user_name'] . ' added you to "' . $ptitle . '"';
-                    $db->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
-                       ->execute([$collab_user['id'], $user_id, $project_id, 'added_to_project', $msg]);
+                    sendNotification($collab_user['id'], $user_id, $project_id, 'added_to_project', $msg);
                     $safe_name = str_replace('|', '', htmlspecialchars($collab_user['name']));
                     $toast = $safe_name . ' added as collaborator!|success';
                 }
@@ -228,7 +223,7 @@ $sb = [
 ];
 
 // ── All users for collaborator search ─────────────────────
-$all_users = $db->query('SELECT id, name, email, role FROM users WHERE is_active=1 ORDER BY name ASC')->fetchAll();
+$all_users = $db->query('SELECT id, name, email, role FROM users ORDER BY name ASC')->fetchAll();
 
 // ── Helpers ───────────────────────────────────────────────
 function fmtDate(?string $iso): string {
@@ -469,7 +464,8 @@ function initials(string $name): string {
             <svg><use href="#i-pen"/></svg>
           </button>
 
-          <!--Edit — available to all collaborators-->
+          <!--Edit — owner only-->
+          <?php if ($is_owner): ?>
           <button class="btn-icon"
                   onclick='openEditModal(<?= $p["id"] ?>, <?= htmlspecialchars(json_encode([
                     "title" => $p["title"],
@@ -480,6 +476,7 @@ function initials(string $name): string {
                   title="Edit project" type="button">
             <svg><use href="#i-edit"/></svg>
           </button>
+          <?php endif; ?>
 
           <!--Manage collaborators — owner only-->
           <?php if ($is_owner && !$p['is_solo']): ?>
@@ -969,6 +966,7 @@ async function openWritingModal(projectId, title) {
   document.getElementById('writing-area').innerHTML          = '';
   document.getElementById('writing-wordcount').textContent   = '0 words';
   openModal('writing-modal');
+  document.execCommand('defaultParagraphSeparator', false, 'p');
 
   // Load existing content
   try {
@@ -990,6 +988,7 @@ function closeWritingModal() {
 
 function onWritingInput() {
   updateWordCount();
+  updateToolbarState();
   document.getElementById('writing-save-status').textContent = 'Unsaved…';
   if (writingSaveTimer) clearTimeout(writingSaveTimer);
   writingSaveTimer = setTimeout(saveWriting, 1500);
@@ -1021,14 +1020,97 @@ function updateWordCount() {
   document.getElementById('writing-wordcount').textContent = words + ' word' + (words !== 1 ? 's' : '');
 }
 
+/* ── Toolbar formatting ── */
 function wFmt(cmd) {
-  document.getElementById('writing-area').focus();
+  const area = document.getElementById('writing-area');
+  area.focus();
   document.execCommand(cmd, false, null);
+  updateToolbarState();
 }
+
 function wBlock(tag) {
-  document.getElementById('writing-area').focus();
-  document.execCommand('formatBlock', false, tag);
+  const area = document.getElementById('writing-area');
+  area.focus();
+
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+
+  const range = sel.getRangeAt(0);
+
+  // Find the block-level ancestor inside writing-area
+  let node = range.commonAncestorContainer;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+
+  // Walk up until we hit a direct child of writing-area or writing-area itself
+  while (node && node !== area && node.parentNode !== area) {
+    node = node.parentNode;
+  }
+
+  if (!node || node === area) {
+    // No block found — wrap selected/current content in the new tag
+    document.execCommand('formatBlock', false, '<' + tag + '>');
+  } else {
+    if (node.tagName.toLowerCase() === tag) {
+      // Already this block type — toggle back to paragraph if heading, or do nothing
+      if (tag !== 'p') {
+        const p = document.createElement('p');
+        p.innerHTML = node.innerHTML;
+        node.replaceWith(p);
+        // Restore caret to new element
+        const r = document.createRange();
+        r.selectNodeContents(p);
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    } else {
+      // Replace current block tag with new one
+      const newEl = document.createElement(tag);
+      newEl.innerHTML = node.innerHTML;
+      node.replaceWith(newEl);
+      // Restore caret
+      const r = document.createRange();
+      r.selectNodeContents(newEl);
+      r.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    }
+  }
+
+  area.dispatchEvent(new Event('input'));
+  updateToolbarState();
 }
+
+function updateToolbarState() {
+  // Bold / Italic / Underline active state
+  const cmds = { bold: 'B', italic: 'I', underline: 'U' };
+  Object.entries(cmds).forEach(([cmd, label]) => {
+    const btn = document.querySelector(`.writing-toolbar button[title="${cmd.charAt(0).toUpperCase() + cmd.slice(1)}"]`);
+    if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+  });
+
+  // Block type active state
+  const sel = window.getSelection();
+  let blockTag = 'p';
+  if (sel && sel.rangeCount > 0) {
+    let node = sel.getRangeAt(0).commonAncestorContainer;
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+    const area = document.getElementById('writing-area');
+    while (node && node !== area && node.parentNode !== area) node = node.parentNode;
+    if (node && node !== area) blockTag = node.tagName.toLowerCase();
+  }
+  document.querySelector('.writing-toolbar button[title="Heading"]')
+    ?.classList.toggle('active', blockTag === 'h2');
+  document.querySelector('.writing-toolbar button[title="Paragraph"]')
+    ?.classList.toggle('active', blockTag === 'p');
+}
+
+// Update toolbar state on selection change
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement === document.getElementById('writing-area')) {
+    updateToolbarState();
+  }
+});
 </script>
 
 </body>

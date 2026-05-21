@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : ['draft','in_progress','review'];
 
         if (in_array($new_status, $allowed)) {
-            $db->prepare('UPDATE projects SET status=?, updated_at=NOW() WHERE id=?')
+            $db->prepare('UPDATE projects SET status=? WHERE id=?')
                ->execute([$new_status, $proj_id]);
 
             // Notify all collaborators of status change
@@ -59,8 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $collabs_stmt->execute([$proj_id, $user_id]);
             $msg = $_SESSION['user_name'] . ' changed status to ' . ucfirst(str_replace('_',' ',$new_status)) . ' on "' . $project['title'] . '"';
             foreach ($collabs_stmt->fetchAll() as $c) {
-                $db->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
-                   ->execute([$c['user_id'], $user_id, $proj_id, 'status_changed', $msg]);
+                sendNotification($c['user_id'], $user_id, $proj_id, 'status_changed', $msg);
             }
             $toast = 'Status updated.|success';
         }
@@ -68,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ── Add collaborator (owner only) ─────────────────────
     } elseif ($action === 'add_collab' && $is_owner) {
         $collab_email = trim($_POST['collab_email'] ?? '');
-        $stmt = $db->prepare('SELECT id, name FROM users WHERE email=? AND is_active=1');
+        $stmt = $db->prepare('SELECT id, name FROM users WHERE email=?');
         $stmt->execute([$collab_email]);
         $collab_user = $stmt->fetch();
 
@@ -85,8 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->prepare('INSERT INTO project_collaborators (project_id, user_id) VALUES (?,?)')->execute([$proj_id, $collab_user['id']]);
                 // Notify new collaborator
                 $msg = $_SESSION['user_name'] . ' added you to "' . $project['title'] . '"';
-                $db->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
-                   ->execute([$collab_user['id'], $user_id, $proj_id, 'added_to_project', $msg]);
+                sendNotification($collab_user['id'], $user_id, $proj_id, 'added_to_project', $msg);
                 $safe = str_replace('|','', htmlspecialchars($collab_user['name']));
                 $toast = $safe . ' added as collaborator!|success';
             }
@@ -102,8 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $removed = $stmt->fetch();
             $db->prepare('DELETE FROM project_collaborators WHERE project_id=? AND user_id=?')->execute([$proj_id, $collab_id]);
             $msg = 'You were removed from "' . $project['title'] . '"';
-            $db->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
-               ->execute([$collab_id, $user_id, $proj_id, 'removed_from_project', $msg]);
+            sendNotification($collab_id, $user_id, $proj_id, 'removed_from_project', $msg);
             $toast = 'Collaborator removed.|success';
         }
 
@@ -114,8 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $collabs_stmt->execute([$proj_id, $user_id]);
         $msg = '"' . $project['title'] . '" was deleted by ' . $_SESSION['user_name'];
         foreach ($collabs_stmt->fetchAll() as $c) {
-            $db->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
-               ->execute([$c['user_id'], $user_id, $proj_id, 'project_deleted', $msg]);
+            sendNotification($c['user_id'], $user_id, $proj_id, 'project_deleted', $msg);
         }
         $db->prepare('DELETE FROM projects WHERE id=?')->execute([$proj_id]);
         header('Location: dashboard.php?toast=' . urlencode('Project deleted.|error'));
@@ -146,7 +142,7 @@ $stmt->execute([$proj_id]);
 $collaborators = $stmt->fetchAll();
 
 // All users for add collaborator datalist
-$all_users = $db->query('SELECT id, name, email, role FROM users WHERE is_active=1 ORDER BY name ASC')->fetchAll();
+$all_users = $db->query('SELECT id, name, email, role FROM users ORDER BY name ASC')->fetchAll();
 
 $role_labels = ['speechwriter'=>'Speech Writer','ghostwriter'=>'Ghostwriter','copywriter'=>'Copywriter','journalist'=>'Journalist'];
 
@@ -232,7 +228,7 @@ function p_type_label(string $t): string {
         <div class="pdc-item"><span class="pdc-key">Status</span><span class="pdc-val"><?= p_status_label($project['status']) ?></span></div>
         <div class="pdc-item"><span class="pdc-key">Due Date</span><span class="pdc-val"><?= $project['due_date'] ? (new DateTime($project['due_date']))->format('M j, Y') : '—' ?></span></div>
         <div class="pdc-item"><span class="pdc-key">Created</span><span class="pdc-val"><?= (new DateTime($project['created_at']))->format('M j, Y') ?></span></div>
-        <div class="pdc-item"><span class="pdc-key">Last Updated</span><span class="pdc-val"><?= (new DateTime($project['updated_at']))->format('M j, Y') ?></span></div>
+        <div class="pdc-item"><span class="pdc-key">Last Updated</span><span class="pdc-val"><?= !empty($project['updated_at']) ? (new DateTime($project['updated_at']))->format('M j, Y') : '—' ?></span></div>
       </div>
     </div>
 

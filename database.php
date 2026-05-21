@@ -49,3 +49,35 @@ function getDB(): PDO {
 
     return $pdo;
 }
+
+/**
+ * Check if a user has notifications enabled (defaults to true if no setting saved).
+ * Safe to call even if the settings column doesn't exist yet.
+ */
+function userWantsNotification(int $user_id): bool {
+    try {
+        $pdo  = getDB();
+        $stmt = $pdo->prepare('SELECT settings FROM users WHERE id = ?');
+        $stmt->execute([$user_id]);
+        $raw  = $stmt->fetchColumn();
+        if (!$raw) return true;
+        $prefs = json_decode($raw, true) ?: [];
+        return ($prefs['notif_enabled'] ?? 1) == 1;
+    } catch (PDOException $e) {
+        return true; // column missing — default to on
+    }
+}
+
+/**
+ * Insert a notification only if the recipient has them enabled.
+ */
+function sendNotification(int $to_user_id, int $from_user_id, int $project_id, string $type, string $message): void {
+    if (!userWantsNotification($to_user_id)) return;
+    try {
+        $pdo = getDB();
+        $pdo->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
+            ->execute([$to_user_id, $from_user_id, $project_id, $type, $message]);
+    } catch (PDOException $e) {
+        // notifications table may not exist yet — silently skip
+    }
+}
