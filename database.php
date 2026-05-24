@@ -3,16 +3,16 @@
 //  Ame Writer — database.php
 //  Shared PDO connection. Include in every PHP page.
 //
-//  Localhost defaults are set below.
-//  On deployment: swap credentials or use environment vars.
+//  Railway environment variables with localhost fallbacks.
 // ============================================================
 
-define('DB_HOST',     'localhost');
-define('DB_PORT',     '3306');
-define('DB_NAME',     'amewriter_db');
-define('DB_USER',     'root');
-define('DB_PASSWORD', '');           // change on deployment
-define('DB_CHARSET',  'utf8mb4');
+$host   = $_ENV['MYSQLHOST']     ?? getenv('MYSQLHOST')     ?? 'localhost';
+$port   = $_ENV['MYSQLPORT']     ?? getenv('MYSQLPORT')     ?? '3306';
+$dbname = $_ENV['MYSQLDATABASE'] ?? getenv('MYSQLDATABASE') ?? 'amewriter_db';
+$user   = $_ENV['MYSQLUSER']     ?? getenv('MYSQLUSER')     ?? 'root';
+$pass   = $_ENV['MYSQLPASSWORD'] ?? getenv('MYSQLPASSWORD') ?? getenv('MYSQLROOT_PASSWORD') ?? '';
+
+define('DB_CHARSET', 'utf8mb4');
 
 /**
  * Returns a singleton PDO instance.
@@ -21,10 +21,13 @@ define('DB_CHARSET',  'utf8mb4');
 function getDB(): PDO {
     static $pdo = null;
 
+    // Use the variables defined above
+    global $host, $port, $dbname, $user, $pass;
+
     if ($pdo === null) {
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-            DB_HOST, DB_PORT, DB_NAME, DB_CHARSET
+            $host, $port, $dbname, DB_CHARSET
         );
 
         $options = [
@@ -34,7 +37,7 @@ function getDB(): PDO {
         ];
 
         try {
-            $pdo = new PDO($dsn, DB_USER, DB_PASSWORD, $options);
+            $pdo = new PDO($dsn, $user, $pass, $options);
         } catch (PDOException $e) {
             http_response_code(500);
             die('
@@ -42,7 +45,7 @@ function getDB(): PDO {
                         background:#fff1f1;border:1px solid #fca5a5;border-radius:12px;color:#7f1d1d;">
                 <strong>Database connection failed.</strong><br><br>
                 ' . htmlspecialchars($e->getMessage()) . '<br><br>
-                <small>Check your credentials in <code>database.php</code> and make sure MySQL is running.</small>
+                <small>Check your environment variables in Railway or credentials in <code>database.php</code>.</small>
             </div>');
         }
     }
