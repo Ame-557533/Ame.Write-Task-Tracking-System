@@ -12,14 +12,11 @@ $role_labels = [
     'journalist'   => 'Journalist',
 ];
 
-// Unread notification count + user theme preference
-$_unread    = 0;
+// Load user theme preference + unread notification count
 $_nav_theme = 'light';
+$_unread    = 0;
 try {
-    $_db_nav   = getDB();
-    $_stmt_nav = $_db_nav->prepare('SELECT COUNT(*) FROM notifications WHERE user_id=? AND is_read=0');
-    $_stmt_nav->execute([$_SESSION['user_id']]);
-    $_unread   = (int) $_stmt_nav->fetchColumn();
+    $_db_nav = getDB();
 
     // Load saved theme preference
     $_stmt_theme = $_db_nav->prepare('SELECT settings FROM users WHERE id=?');
@@ -31,9 +28,15 @@ try {
             $_nav_theme = 'dark';
         }
     }
+
+    // Unread notification count
+    $_stmt_unread = $_db_nav->prepare('SELECT COUNT(*) FROM notifications WHERE user_id=? AND is_read=0');
+    $_stmt_unread->execute([$_SESSION['user_id']]);
+    $_unread = (int) $_stmt_unread->fetchColumn();
+
 } catch (PDOException $e) {
-    $_unread    = 0;
     $_nav_theme = 'light';
+    $_unread    = 0;
 }
 
 function nav_initials(string $name): string {

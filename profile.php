@@ -150,6 +150,10 @@ function prof_initials(string $name): string {
         <div class="profile-name"><?= htmlspecialchars($user['name']) ?></div>
         <div class="profile-role"><?= htmlspecialchars($role_labels[$user['role']] ?? ucfirst($user['role'])) ?></div>
         <div class="profile-email"><?= htmlspecialchars($user['email']) ?></div>
+        <div style="margin-top:4px;font-size:11.5px;color:var(--ink-3)">
+          User ID: <strong style="color:var(--ink-2)">#<?= (int)$user['id'] ?></strong>
+          <span style="margin-left:6px;font-size:10.5px;color:var(--ink-3)">(used for password recovery)</span>
+        </div>
       </div>
       <div class="profile-stats">
         <div class="profile-stat"><span class="profile-stat-val"><?= $owned ?></span><span class="profile-stat-label">Owned</span></div>
@@ -223,6 +227,7 @@ function prof_initials(string $name): string {
     <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
       <p style="font-size:12px;color:var(--ink-3)">
         Member since <?= (new DateTime($user['created_at']))->format('F j, Y') ?>
+        &nbsp;·&nbsp; User ID: <strong>#<?= (int)$user['id'] ?></strong>
       </p>
     </div>
 

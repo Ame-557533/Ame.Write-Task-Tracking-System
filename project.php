@@ -180,9 +180,6 @@ function p_type_label(string $t): string {
     <!--Back + header-->
     <div class="page-header">
       <div>
-        <a href="dashboard.php" class="btn-back-prominent" style="margin-bottom:.75rem;display:inline-flex">
-          <svg><use href="#i-arrow-l"/></svg> Back to Dashboard
-        </a>
         <h2><?= htmlspecialchars($project['title']) ?></h2>
         <p>
           <span class="badge type-<?= $project['type'] ?>"><?= p_type_label($project['type']) ?></span>
@@ -196,6 +193,10 @@ function p_type_label(string $t): string {
           <?php endif; ?>
         </p>
       </div>
+      <a href="dashboard.php" class="btn-back-prominent">
+        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="#i-arrow-l"/></svg>
+        Back to Dashboard
+      </a>
       <?php if ($is_owner): ?>
       <button class="btn-icon" onclick="openDeleteModal()" title="Delete project" type="button"
               style="color:var(--red);border-color:rgba(220,38,38,.2)">
@@ -238,7 +239,7 @@ function p_type_label(string $t): string {
       <div class="pdc-label">Update Status</div>
       <form method="POST" action="project.php?id=<?= $proj_id ?>" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
         <input type="hidden" name="action" value="update_status">
-        <select name="status" style="flex:1;min-width:160px">
+        <select name="status" class="status-select">
           <option value="draft"       <?= $project['status']==='draft'       ?'selected':'' ?>>Draft</option>
           <option value="in_progress" <?= $project['status']==='in_progress' ?'selected':'' ?>>In Progress</option>
           <option value="review"      <?= $project['status']==='review'      ?'selected':'' ?>>Review</option>
@@ -291,14 +292,11 @@ function p_type_label(string $t): string {
             <span class="collab-role"><?= htmlspecialchars($role_labels[$c['role']] ?? ucfirst($c['role'])) ?> · <?= htmlspecialchars($c['email']) ?></span>
           </div>
           <?php if ($is_owner && $c['id'] != $user_id): ?>
-          <form method="POST" action="project.php?id=<?= $proj_id ?>" style="margin-left:auto">
-            <input type="hidden" name="action"    value="remove_collab">
-            <input type="hidden" name="collab_id" value="<?= $c['id'] ?>">
-            <button class="btn-icon" type="submit" title="Remove"
-                    style="color:var(--red);border-color:rgba(220,38,38,.2)">
-              <svg><use href="#i-x"/></svg>
-            </button>
-          </form>
+          <button class="btn-icon" type="button" title="Remove collaborator"
+                  onclick="openRemoveModal(<?= (int)$c['id'] ?>, <?= htmlspecialchars(json_encode($c['name']), ENT_QUOTES) ?>)"
+                  style="color:var(--red);border-color:rgba(220,38,38,.2);margin-left:auto">
+            <svg><use href="#i-x"/></svg>
+          </button>
           <?php endif; ?>
         </div>
         <?php endforeach; ?>
@@ -332,14 +330,43 @@ function p_type_label(string $t): string {
   </div>
 </div>
 
+<!--Remove collaborator modal-->
+<div class="modal-backdrop" id="remove-collab-modal">
+  <div class="modal" style="max-width:380px" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Remove Collaborator</h3>
+      <button class="modal-close" onclick="closeModal('remove-collab-modal')" type="button"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="confirm-body">
+      <div class="confirm-icon"><svg><use href="#i-warn"/></svg></div>
+      <p>Are you sure you want to remove <strong id="remove-collab-name"></strong> from this project?</p>
+    </div>
+    <form method="POST" action="project.php?id=<?= $proj_id ?>" id="remove-collab-form">
+      <input type="hidden" name="action"    value="remove_collab">
+      <input type="hidden" name="collab_id" id="remove-collab-id" value="">
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal('remove-collab-modal')" type="button">Cancel</button>
+        <button class="btn-danger" type="submit">
+          <svg style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2"><use href="#i-x"/></svg> Remove
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="toast-container" id="toast-container"></div>
 
 <script>
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function openDeleteModal() { openModal('delete-modal'); }
+function openRemoveModal(id, name) {
+  document.getElementById('remove-collab-id').value        = id;
+  document.getElementById('remove-collab-name').textContent = name;
+  openModal('remove-collab-modal');
+}
 document.querySelectorAll('.modal-backdrop').forEach(el => {
-  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
 </script>
 </body>

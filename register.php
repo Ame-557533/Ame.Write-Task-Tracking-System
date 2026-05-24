@@ -52,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  VALUES (?, ?, ?, ?, NOW())'
             );
             $stmt->execute([$name, $email, $role, $hash]);
-            $success = 'Account created! Redirecting to sign in…';
+            $new_user_id = (int) $db->lastInsertId();
+            $success = 'Account created! Your User ID is <strong>#' . $new_user_id . '</strong> — save this, you\'ll need it to recover your password. Redirecting…';
         }
     }
 }
@@ -95,11 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($success): ?>
     <div class="php-success">
       <svg><use href="#i-check-c"/></svg>
-      <?= htmlspecialchars($success) ?>
+      <?= $success /* safe: built from server int only */ ?>
     </div>
     <?php endif; ?>
 
-    <form method="POST" action="register.php" novalidate>
+    <form method="POST" action="register.php" novalidate <?= $success ? 'style="display:none"' : '' ?>>
       <div class="field">
         <label for="name">Full name</label>
         <input type="text" id="name" name="name" placeholder="Jane Smith"

@@ -6,6 +6,8 @@
   --bg:            #EFECE6;
   --surface:       #FAFAF8;
   --surface-2:     #F2F0EB;
+  --nav-bg:        rgba(239,236,230,0.88);
+  --sidebar-bg:    #F5F3EE;
   --border:        rgba(0,0,0,0.08);
   --border-md:     rgba(0,0,0,0.14);
   --ink:           #1C1B18;
@@ -299,7 +301,7 @@ body.dashboard-body { display: flex; flex-direction: column; }
   position: fixed;
   top: 0; left: 0; right: 0;
   height: var(--nav-h);
-  background: rgba(239,236,230,0.88);
+  background: var(--nav-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -307,7 +309,7 @@ body.dashboard-body { display: flex; flex-direction: column; }
   align-items: center;
   padding: 0 1.5rem;
   gap: 1rem;
-  z-index: 100;
+  z-index: 150;
 }
 
 .app-nav-brand {
@@ -386,6 +388,7 @@ body.dashboard-body { display: flex; flex-direction: column; }
   width: var(--sidebar-w);
   flex-shrink: 0;
   padding: 1.5rem 1rem;
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -1338,6 +1341,8 @@ body.dashboard-body { display: flex; flex-direction: column; }
   --surface:      #1E1E1E;
   --surface-2:    #272727;
   --surface-3:    #2F2F2F;
+  --nav-bg:       rgba(30,30,30,0.92);
+  --sidebar-bg:   #1A1A1A;
   --border:       rgba(255,255,255,0.08);
   --border-md:    rgba(255,255,255,0.14);
   --ink:          #F0EEE9;
@@ -1408,3 +1413,153 @@ body.dashboard-body { display: flex; flex-direction: column; }
 }
 .settings-toggle-inline input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
 .settings-toggle-inline .toggle-track { margin: 0; }
+
+/* ── Nav z-index fix — always above sidebar stacking context ── */
+
+/* ── Password reset step indicator ── */
+.reset-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 1rem 0 1.25rem;
+}
+.reset-step {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-md);
+  background: var(--surface);
+  color: var(--ink-3);
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .2s;
+}
+.reset-step.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.reset-step.done {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+  font-size: 11px;
+}
+.reset-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border-md);
+  transition: background .2s;
+}
+.reset-step-line.done { background: var(--green); }
+
+/* ── Settings account row ── */
+.settings-account-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .5rem 0;
+}
+.settings-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.settings-account-name  { font-size: 14px; font-weight: 600; color: var(--ink); }
+.settings-account-email { font-size: 13px; color: var(--ink-3); }
+.settings-account-role  { font-size: 12px; font-weight: 500; color: var(--accent); }
+
+/* ════════════════════════════════════════════════
+   DARK MODE TARGETED OVERRIDES
+   ════════════════════════════════════════════════ */
+
+[data-theme="dark"] .app-nav-brand .mark {
+  background: var(--surface-3);
+}
+[data-theme="dark"] .app-nav-brand .mark span {
+  color: var(--ink);
+}
+
+/* ── Avatars: invert to visible dark surface with light text ── */
+[data-theme="dark"] .nav-avatar,
+[data-theme="dark"] .sidebar-avatar,
+[data-theme="dark"] .profile-avatar-lg,
+[data-theme="dark"] .collab-avatar {
+  background: var(--surface-3);
+  color: var(--ink);
+  border-color: var(--border-md);
+}
+[data-theme="dark"] .collab-avatar.more {
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
+/* ── Sidebar active link: use accent instead of --ink so it stays visible ── */
+[data-theme="dark"] .sidebar-link.active {
+  background: var(--accent);
+  color: #fff;
+}
+[data-theme="dark"] .sidebar-link.active svg { stroke: #fff; }
+[data-theme="dark"] .sidebar-link.active .sidebar-badge {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+/* ── Filter tab active: lighter surface so it lifts from the background ── */
+[data-theme="dark"] .filter-tab.active {
+  background: var(--surface-3);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .filter-tab:hover:not(.active) {
+  background: rgba(255,255,255,.06);
+}
+
+/* ── Task/project cards hover border ── */
+[data-theme="dark"] .task-card:hover {
+  border-color: rgba(255,255,255,.1);
+}
+
+/* ── Status select (project.php update status form) ── */
+.status-select {
+  flex: 1;
+  min-width: 160px;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-md);
+  padding: 9px 13px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.status-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+[data-theme="dark"] .status-select {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--border-md);
+}
+
+/* ── Project detail cards in dark mode ── */
+[data-theme="dark"] .project-detail-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* ── Profile sections in dark mode ── */
+[data-theme="dark"] .profile-section {
+  background: var(--surface);
+  border-color: var(--border);
+}
+[data-theme="dark"] .profile-hero {
+  background: var(--surface);
+  border-color: var(--border);
+}
