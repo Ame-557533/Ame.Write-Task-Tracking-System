@@ -4,7 +4,7 @@
 //  Account settings: notifications, about, danger zone.
 // ============================================================
 session_start();
-if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+if (empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 require_once 'database.php';
 
 $db      = getDB();
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->prepare('DELETE FROM project_collaborators WHERE user_id=?')->execute([$user_id]);
             $db->prepare('UPDATE users SET is_active=0 WHERE id=?')->execute([$user_id]);
             session_unset(); session_destroy();
-            header('Location: login.php');
+            header('Location: index.php');
             exit;
         }
     }

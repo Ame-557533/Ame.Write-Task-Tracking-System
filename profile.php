@@ -4,7 +4,7 @@
 //  View and edit name, email, role, and password.
 // ============================================================
 session_start();
-if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+if (empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 require_once 'database.php';
 
 $db      = getDB();

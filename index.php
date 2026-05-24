@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-//  Ame Writer — login.php
+//  Ame Writer — index.php
 //  Writer login. Verifies email + bcrypt password,
 //  writes session, redirects to dashboard.
 // ============================================================
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <?php endif; ?>
 
-    <form method="POST" action="login.php" novalidate>
+    <form method="POST" action="index.php" novalidate>
       <div class="field">
         <label for="email">Email address</label>
         <input type="email" id="email" name="email" placeholder="you@amewriter.com"

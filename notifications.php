@@ -5,7 +5,7 @@
 //  Delete with confirmation modal.
 // ============================================================
 session_start();
-if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+if (empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 require_once 'database.php';
 
 $db      = getDB();

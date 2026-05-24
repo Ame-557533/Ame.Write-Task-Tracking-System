@@ -131,7 +131,7 @@ $step_name = $_SESSION['pw_reset_name'] ?? '';
   </div>
 
   <div class="auth-card">
-    <a href="login.php" class="back-link">
+    <a href="index.php" class="back-link">
       <svg><use href="#i-arrow-l"/></svg>
       Back to sign in
     </a>
@@ -151,7 +151,7 @@ $step_name = $_SESSION['pw_reset_name'] ?? '';
       <svg><use href="#i-check-c"/></svg>
       <?= htmlspecialchars($success) ?>
     </div>
-    <a href="login.php" class="btn-primary" style="text-align:center;margin-top:.5rem;text-decoration:none;display:block">
+    <a href="index.php" class="btn-primary" style="text-align:center;margin-top:.5rem;text-decoration:none;display:block">
       Sign in
     </a>
 

@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ame Writer — Create Account</title>
   <?php if ($success): ?>
-  <meta http-equiv="refresh" content="2;url=login.php">
+  <meta http-equiv="refresh" content="2;url=index.php">
   <?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="divider">or</div>
     <p class="auth-footer">
       Already have an account?&nbsp;
-      <a href="login.php" class="link-btn">Sign in</a>
+      <a href="index.php" class="link-btn">Sign in</a>
     </p>
   </div>
 
