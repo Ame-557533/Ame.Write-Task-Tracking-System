@@ -1,9 +1,7 @@
 <?php
-// ============================================================
 //  Ame Writer — nav.php
 //  Shared top nav + sidebar. Include after session_start()
 //  and require_once 'database.php' on every protected page.
-// ============================================================
 
 $role_labels = [
     'speechwriter' => 'Speech Writer',

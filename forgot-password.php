@@ -1,11 +1,10 @@
 <?php
-// ============================================================
 //  Ame Writer — forgot-password.php
 //  3-step password recovery:
 //    Step 1 — Enter username (full name)
 //    Step 2 — Enter User ID as recovery code
 //    Step 3 — Set new password
-// ============================================================
+
 session_start();
 
 if (!empty($_SESSION['user_id'])) {
@@ -19,12 +18,12 @@ $error   = '';
 $success = '';
 $step    = (int) ($_SESSION['pw_reset_step'] ?? 1);
 
-// ── POST handler ─────────────────────────────────────────
+// POST handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db     = getDB();
     $action = $_POST['action'] ?? '';
 
-    // ── Step 1: verify username ───────────────────────────
+    // Step 1: verify username
     if ($action === 'verify_name') {
         $name = trim($_POST['username'] ?? '');
         if (empty($name)) {
@@ -46,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-    // ── Step 2: verify User ID ────────────────────────────
+    // Step 2: verify User ID
     } elseif ($action === 'verify_id') {
         $entered_id = trim($_POST['user_id'] ?? '');
         $name       = $_SESSION['pw_reset_name'] ?? '';
@@ -68,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-    // ── Step 3: set new password ──────────────────────────
+    // Step 3: set new password 
     } elseif ($action === 'reset_password') {
         $reset_uid = (int) ($_SESSION['pw_reset_user_id'] ?? 0);
         $new_pw    = $_POST['new_password']     ?? '';
@@ -146,7 +145,7 @@ $step_name = $_SESSION['pw_reset_name'] ?? '';
     <?php endif; ?>
 
     <?php if ($step === 0): ?>
-    <!-- ── Done ─────────────────────────────────────── -->
+    <!-- Done -->
     <div class="php-success">
       <svg><use href="#i-check-c"/></svg>
       <?= htmlspecialchars($success) ?>
@@ -156,7 +155,7 @@ $step_name = $_SESSION['pw_reset_name'] ?? '';
     </a>
 
     <?php elseif ($step === 1): ?>
-    <!-- ── Step 1: Username ──────────────────────────── -->
+    <!-- Step 1: Username -->
     <p class="auth-sub">Enter the full name on your account.</p>
     <div class="reset-steps">
       <span class="reset-step active">1</span>
@@ -176,7 +175,7 @@ $step_name = $_SESSION['pw_reset_name'] ?? '';
     </form>
 
     <?php elseif ($step === 2): ?>
-    <!-- ── Step 2: User ID ───────────────────────────── -->
+    <!-- Step 2: User ID -->
     <p class="auth-sub">
       Enter your <strong>User ID</strong> — the number shown on your profile and in your account details.
     </p>
@@ -202,7 +201,7 @@ $step_name = $_SESSION['pw_reset_name'] ?? '';
     </a>
 
     <?php elseif ($step === 3): ?>
-    <!-- ── Step 3: New password ──────────────────────── -->
+    <!-- Step 3: New password -->
     <p class="auth-sub">Choose a new password for your account.</p>
     <div class="reset-steps">
       <span class="reset-step done">✓</span>

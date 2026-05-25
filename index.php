@@ -1,9 +1,8 @@
 <?php
-// ============================================================
 //  Ame Writer — index.php
 //  Writer login. Verifies email + bcrypt password,
 //  writes session, redirects to dashboard.
-// ============================================================
+
 session_start();
 
 if (!empty($_SESSION['user_id'])) {
@@ -16,7 +15,7 @@ require_once 'database.php';
 $error     = '';
 $old_email = '';
 
-// ── POST handler ──────────────────────────────────────────
+// POST handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email     = trim($_POST['email']    ?? '');
     $password  = $_POST['password']      ?? '';

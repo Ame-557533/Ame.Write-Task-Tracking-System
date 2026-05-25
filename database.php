@@ -1,10 +1,7 @@
 <?php
-// ============================================================
 //  Ame Writer — database.php
 //  Shared PDO connection. Include in every PHP page.
-//
 //  Railway environment variables with localhost fallbacks.
-// ============================================================
 
 $host   = $_ENV['MYSQLHOST']     ?? getenv('MYSQLHOST')     ?? 'localhost';
 $port   = $_ENV['MYSQLPORT']     ?? getenv('MYSQLPORT')     ?? '3306';
@@ -14,14 +11,12 @@ $pass   = $_ENV['MYSQLPASSWORD'] ?? getenv('MYSQLPASSWORD') ?? getenv('MYSQLROOT
 
 define('DB_CHARSET', 'utf8mb4');
 
-/**
- * Returns a singleton PDO instance.
- * Shows a friendly error page on connection failure.
- */
+/* Gets a PDO object returned as a singleton.
+ * Displays a friendly error page when connection fails. */
 function getDB(): PDO {
     static $pdo = null;
 
-    // Use the variables defined above
+    // Using the variables that was defined
     global $host, $port, $dbname, $user, $pass;
 
     if ($pdo === null) {
@@ -53,10 +48,8 @@ function getDB(): PDO {
     return $pdo;
 }
 
-/**
- * Check if a user has notifications enabled (defaults to true if no setting saved).
- * Safe to call even if the settings column doesn't exist yet.
- */
+/* Determine whether a user has notifications turned on (true by default if user did not save a setting).
+ * Safely call even when the settings column is not yet created. */
 function userWantsNotification(int $user_id): bool {
     try {
         $pdo  = getDB();
@@ -71,9 +64,7 @@ function userWantsNotification(int $user_id): bool {
     }
 }
 
-/**
- * Insert a notification only if the recipient has them enabled.
- */
+/* Only include a notification if the recipient has it turned on. */
 function sendNotification(int $to_user_id, int $from_user_id, int $project_id, string $type, string $message): void {
     if (!userWantsNotification($to_user_id)) return;
     try {
@@ -81,6 +72,6 @@ function sendNotification(int $to_user_id, int $from_user_id, int $project_id, s
         $pdo->prepare('INSERT INTO notifications (user_id, from_user, project_id, type, message) VALUES (?,?,?,?,?)')
             ->execute([$to_user_id, $from_user_id, $project_id, $type, $message]);
     } catch (PDOException $e) {
-        // notifications table may not exist yet — silently skip
+        // If notifications table doesn't exist, ignore it silently
     }
 }

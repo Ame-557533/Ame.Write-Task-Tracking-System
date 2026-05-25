@@ -1,12 +1,11 @@
 <?php
-// ============================================================
 //  Ame Writer — project.php
 //  Project detail page. Only collaborators can access.
 //  Shows project info, collaborators, status updates.
 //  Owner can change status, add/remove collaborators.
 //  All collaborators can update status (draft→in_progress→review).
 //  Only owner can mark complete or delete.
-// ============================================================
+
 session_start();
 if (empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 require_once 'database.php';
@@ -18,7 +17,7 @@ $toast   = '';
 
 if (!$proj_id) { header('Location: dashboard.php'); exit; }
 
-// ── Security: must be a collaborator ─────────────────────
+// Security: must be a collaborator
 $stmt = $db->prepare(
     'SELECT p.*, u.name AS owner_name, u.email AS owner_email
      FROM projects p
@@ -37,11 +36,11 @@ if (!$project) {
 
 $is_owner = ($project['owner_id'] == $user_id);
 
-// ── POST handler ─────────────────────────────────────────
+// POST handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    // ── Update status (collaborators: draft/in_progress/review; owner: all incl. complete) ──
+    // Update status (collaborators: draft/in_progress/review; owner: all incl. complete)
     if ($action === 'update_status') {
         $new_status = $_POST['status'] ?? '';
         $allowed = $is_owner
@@ -64,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Status updated.|success';
         }
 
-    // ── Add collaborator (owner only) ─────────────────────
+    // Add collaborator (owner only)
     } elseif ($action === 'add_collab' && $is_owner) {
         $collab_email = trim($_POST['collab_email'] ?? '');
         $stmt = $db->prepare('SELECT id, name FROM users WHERE email=?');
@@ -90,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-    // ── Remove collaborator (owner only) ──────────────────
+    // Remove collaborator (owner only) 
     } elseif ($action === 'remove_collab' && $is_owner) {
         $collab_id = (int) ($_POST['collab_id'] ?? 0);
         if ($collab_id !== $user_id) {
@@ -104,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Collaborator removed.|success';
         }
 
-    // ── Delete project (owner only) ───────────────────────
+    // Delete project (owner only)
     } elseif ($action === 'delete_project' && $is_owner) {
         // Notify all collaborators before delete
         $collabs_stmt = $db->prepare('SELECT user_id FROM project_collaborators WHERE project_id=? AND user_id != ?');

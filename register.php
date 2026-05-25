@@ -1,8 +1,7 @@
 <?php
-// ============================================================
 //  Ame Writer — register.php
 //  Writer self-registration with role selection.
-// ============================================================
+
 session_start();
 
 if (!empty($_SESSION['user_id'])) {
@@ -16,7 +15,7 @@ $error   = '';
 $success = '';
 $old     = ['name' => '', 'email' => '', 'role' => 'copywriter'];
 
-// ── POST handler ──────────────────────────────────────────
+// POST handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name']     ?? '');
     $email    = trim($_POST['email']    ?? '');
@@ -96,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($success): ?>
     <div class="php-success">
       <svg><use href="#i-check-c"/></svg>
-      <?= $success /* safe: built from server int only */ ?>
+      <?= $success /* built from server int only */ ?>
     </div>
     <?php endif; ?>
 

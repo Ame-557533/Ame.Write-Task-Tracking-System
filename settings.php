@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Could not save preferences: ' . htmlspecialchars($e->getMessage());
         }
 
-    // ── Delete account ────────────────────────────────────
+    // Delete account
     } elseif ($action === 'delete_account') {
         $confirm_text = trim($_POST['confirm_text'] ?? '');
         if ($confirm_text !== 'DELETE') {

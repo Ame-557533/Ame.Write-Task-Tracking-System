@@ -1,5 +1,4 @@
 <?php
-// ============================================================
 //  Ame Writer — dashboard.php
 //  Protected page. Shows writing projects.
 //  Only the project owner can delete or mark complete.
@@ -14,7 +13,7 @@
 //    action=reopen         → owner only, sets status=in_progress
 //    action=add_collab     → owner adds collaborator by email
 //    action=remove_collab  → owner removes collaborator
-// ============================================================
+
 session_start();
 
 if (empty($_SESSION['user_id'])) {
@@ -28,11 +27,11 @@ $db      = getDB();
 $user_id = (int) $_SESSION['user_id'];
 $toast   = '';
 
-// ── POST handler ─────────────────────────────────────────
+// POST handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    // ── Add project ──────────────────────────────────────
+    // Add project
     if ($action === 'add_project') {
         $title   = trim($_POST['title']   ?? '');
         $desc    = trim($_POST['desc']    ?? '');
@@ -52,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Project created!|success';
         }
 
-    // ── Edit project ─────────────────────────────────────
+    // Edit project
     } elseif ($action === 'edit_project') {
         $id    = (int) ($_POST['id']    ?? 0);
         $title = trim($_POST['title']   ?? '');
@@ -75,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Project updated.|success';
         }
 
-    // ── Delete project (owner only) ───────────────────────
+    // Delete project (owner only)
     } elseif ($action === 'delete_project') {
         $id = (int) ($_POST['id'] ?? 0);
         $stmt = $db->prepare('SELECT id FROM projects WHERE id=? AND owner_id=?');
@@ -87,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Only the project owner can delete this project.|error';
         }
 
-    // ── Mark complete (owner only) ────────────────────────
+    // Mark complete (owner only)
     } elseif ($action === 'complete') {
         $id = (int) ($_POST['id'] ?? 0);
         $stmt = $db->prepare('SELECT id FROM projects WHERE id=? AND owner_id=?');
@@ -99,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Only the project owner can mark this complete.|error';
         }
 
-    // ── Reopen project (owner only) ───────────────────────
+    // Reopen project (owner only)
     } elseif ($action === 'reopen') {
         $id = (int) ($_POST['id'] ?? 0);
         $stmt = $db->prepare('SELECT id FROM projects WHERE id=? AND owner_id=?');
@@ -109,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toast = 'Project reopened.|success';
         }
 
-    // ── Add collaborator (owner only) ─────────────────────
+    // Add collaborator (owner only)
     } elseif ($action === 'add_collab') {
         $project_id    = (int) ($_POST['project_id']    ?? 0);
         $collab_email  = trim($_POST['collab_email']    ?? '');
@@ -148,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-    // ── Remove collaborator (owner only) ──────────────────
+    // Remove collaborator (owner only) 
     } elseif ($action === 'remove_collab') {
         $project_id  = (int) ($_POST['project_id']  ?? 0);
         $collab_id   = (int) ($_POST['collab_id']   ?? 0);
@@ -171,7 +170,7 @@ if (!empty($_GET['toast'])) {
     $toast = $_GET['toast'];
 }
 
-// ── Fetch ALL projects — mark membership ─────────────────
+// Fetch ALL projects — mark membership
 $stmt = $db->prepare(
     'SELECT p.id, p.title, p.description AS `desc`, p.type, p.status,
             p.is_solo, p.due_date AS `due`, p.owner_id, p.created_at,
@@ -189,7 +188,7 @@ $projects = $stmt->fetchAll();
 // Split for stats (only projects user is part of)
 $my_projects = array_filter($projects, fn($p) => $p['is_member']);
 
-// ── Collaborators per project ─────────────────────────────
+// Collaborators per project
 $project_ids = array_column($projects, 'id');
 $collabs_map = [];
 if ($project_ids) {
@@ -206,14 +205,14 @@ if ($project_ids) {
     }
 }
 
-// ── Stats (based on user's own projects) ─────────────────
+// Stats (based on user's own projects)
 $total      = count($my_projects);
 $complete   = count(array_filter($my_projects, fn($p) => $p['status'] === 'complete'));
 $in_prog    = count(array_filter($my_projects, fn($p) => $p['status'] === 'in_progress'));
 $draft      = count(array_filter($my_projects, fn($p) => $p['status'] === 'draft'));
 $collab_cnt = count(array_filter($my_projects, fn($p) => !$p['is_solo']));
 
-// ── Sidebar counts ─────────────────────────────────────────
+// Sidebar counts
 $sb = [
     'all'      => count($projects),
     'mine'     => count(array_filter($my_projects, fn($p) => $p['owner_id'] == $user_id)),
@@ -222,10 +221,10 @@ $sb = [
     'draft'    => $draft + $in_prog,
 ];
 
-// ── All users for collaborator search ─────────────────────
+// All users for collaborator search
 $all_users = $db->query('SELECT id, name, email, role FROM users ORDER BY name ASC')->fetchAll();
 
-// ── Helpers ───────────────────────────────────────────────
+// Helpers 
 function fmtDate(?string $iso): string {
     if (!$iso) return '';
     return (new DateTime($iso))->format('M j, Y');
@@ -711,7 +710,7 @@ let activeView   = 'all';
 let activeFilter = 'all';
 const ME = <?= $user_id ?>;
 
-/* ── Sidebar view ── */
+/* Sidebar view */
 function setView(v, btn) {
   activeView = v;
   document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
@@ -722,7 +721,7 @@ function setView(v, btn) {
   filterProjects();
 }
 
-/* ── Tab filter ── */
+/* Tab filter */
 function setTabFilter(btn) {
   document.querySelectorAll('.filter-tab').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
@@ -730,7 +729,7 @@ function setTabFilter(btn) {
   filterProjects();
 }
 
-/* ── Filter projects ── */
+/* Filter projects */
 function filterProjects() {
   const q = document.getElementById('search-input').value.toLowerCase();
   let visible = 0;
@@ -757,7 +756,7 @@ function filterProjects() {
   document.getElementById('empty-state').style.display = visible ? 'none' : 'block';
 }
 
-/* ── Modal helpers ── */
+/* Modal helpers */
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -765,7 +764,7 @@ document.querySelectorAll('.modal-backdrop').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
 
-/* ── Add modal ── */
+/* Add modal */
 function openAddModal() {
   document.getElementById('form-action').value       = 'add_project';
   document.getElementById('form-id').value           = '';
@@ -780,7 +779,7 @@ function openAddModal() {
   openModal('project-modal');
 }
 
-/* ── Edit modal ── */
+/* Edit modal */
 function openEditModal(id, data) {
   document.getElementById('form-action').value       = 'edit_project';
   document.getElementById('form-id').value           = id;
@@ -794,7 +793,7 @@ function openEditModal(id, data) {
   openModal('project-modal');
 }
 
-/* ── Collaborator modal ── */
+/* Collaborator modal */
 function openCollabModal(projectId, collabs) {
   document.getElementById('collab-project-id').value = projectId;
   document.getElementById('collab-search').value     = '';
@@ -826,14 +825,14 @@ function openCollabModal(projectId, collabs) {
   openModal('collab-modal');
 }
 
-/* ── Delete modal ── */
+/* Delete modal */
 function openDeleteModal(id, name) {
   document.getElementById('del-project-id').value         = id;
   document.getElementById('del-project-name').textContent = '"' + name + '"';
   openModal('delete-modal');
 }
 
-/* ── Form validation ── */
+/* Form validation */
 document.getElementById('project-form').addEventListener('submit', function(e) {
   const title = document.getElementById('m-title').value.trim();
   if (!title) {
@@ -849,7 +848,7 @@ function toggleSoloHint(cb) {
   if (hint) hint.style.color = cb.checked ? 'var(--amber)' : '';
 }
 
-/* ── Helpers ── */
+/* Helpers */
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -861,7 +860,7 @@ function initials(name) {
   return i;
 }
 
-/* ── Fire toast from redirect ── */
+/* Fire toast from redirect */
 <?php if ($toast):
   [$tmsg, $ttype] = explode('|', $toast . '|');
 ?>
@@ -879,9 +878,7 @@ function toast(msg, type) {
   setTimeout(() => el.remove(), 3200);
 }
 
-/* ════════════════════════════════
-   COLLAB LIVE SEARCH
-════════════════════════════════ */
+/* COLLAB LIVE SEARCH */
 const ALL_USERS = <?= json_encode(array_values(array_filter($all_users, fn($u) => $u['id'] != $user_id))) ?>;
 let selectedCollabEmail = '';
 
@@ -952,9 +949,7 @@ document.addEventListener('click', e => {
   }
 });
 
-/* ════════════════════════════════
-   WRITING NOTEPAD
-════════════════════════════════ */
+/* WRITING NOTEPAD */
 let writingProjectId = null;
 let writingSaveTimer = null;
 
@@ -1020,7 +1015,7 @@ function updateWordCount() {
   document.getElementById('writing-wordcount').textContent = words + ' word' + (words !== 1 ? 's' : '');
 }
 
-/* ── Toolbar formatting ── */
+/* Toolbar formatting */
 function wFmt(cmd) {
   const area = document.getElementById('writing-area');
   area.focus();

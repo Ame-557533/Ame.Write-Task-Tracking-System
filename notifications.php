@@ -1,9 +1,8 @@
 <?php
-// ============================================================
 //  Ame Writer — notifications.php
 //  View all notifications. Mark as read individually or all.
 //  Delete with confirmation modal.
-// ============================================================
+
 session_start();
 if (empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 require_once 'database.php';
@@ -11,7 +10,7 @@ require_once 'database.php';
 $db      = getDB();
 $user_id = (int) $_SESSION['user_id'];
 
-// ── POST handler ─────────────────────────────────────────
+// POST handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 

@@ -1,9 +1,8 @@
 <?php
-// ============================================================
 //  Ame Writer — writing.php
 //  AJAX endpoint for saving and loading writing content.
 //  Only project collaborators can access.
-// ============================================================
+
 session_start();
 header('Content-Type: application/json');
 
@@ -16,7 +15,7 @@ $db      = getDB();
 $user_id = (int) $_SESSION['user_id'];
 $action  = $_GET['action'] ?? $_POST['action'] ?? '';
 
-// ── Load content ─────────────────────────────────────────
+// Load content 
 if ($action === 'load') {
     $project_id = (int) ($_GET['project_id'] ?? 0);
 
@@ -37,7 +36,7 @@ if ($action === 'load') {
     exit;
 }
 
-// ── Save content ─────────────────────────────────────────
+// Save content 
 if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $project_id = (int) ($_POST['project_id'] ?? 0);
     $content    = $_POST['content'] ?? '';

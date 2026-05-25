@@ -1,8 +1,7 @@
 <?php
-// ============================================================
 //  Ame Writer — profile.php
 //  View and edit name, email, role, and password.
-// ============================================================
+
 session_start();
 if (empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 require_once 'database.php';
@@ -17,11 +16,11 @@ $stmt = $db->prepare('SELECT id, name, email, role, created_at FROM users WHERE 
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
-// ── POST handler ─────────────────────────────────────────
+// POST handler 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    // ── Update profile info ───────────────────────────────
+    // Update profile info 
     if ($action === 'update_profile') {
         $name  = trim($_POST['name']  ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -55,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-    // ── Change password ───────────────────────────────────
+    // Change password 
     } elseif ($action === 'change_password') {
         $current = $_POST['current_password'] ?? '';
         $new_pw  = $_POST['new_password']     ?? '';
